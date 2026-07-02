@@ -1,0 +1,3 @@
+payment_id,invoice_id,amount,date,method
+P5001,I1002,2750.50,2026-05-25,bank
+P5002,I1004,1200.00,2026-05-05,check

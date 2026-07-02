@@ -1,0 +1,13 @@
+{
+  "name": "vendor-reconcile",
+  "version": "1.0.0",
+  "description": "CAP + CDS + UI5 starter for vendor reconciliation using CSV-backed data",
+  "private": true,
+  "scripts": {
+    "start": "cds serve",
+    "watch": "cds watch"
+  },
+  "dependencies": {
+    "@sap/cds": "^8"
+  }
+}

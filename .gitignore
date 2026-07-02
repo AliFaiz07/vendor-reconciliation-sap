@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# CAP / CDS build output
+gen/
+*.db
+*.db-shm
+*.db-wal
+sqlite.db
+.cds_gen/
+
+# Environment & secrets
+.env
+default-env.json
+*-key.json
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

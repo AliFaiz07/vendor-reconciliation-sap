@@ -1,0 +1,33 @@
+{
+  "_version": "1.12.0",
+  "sap.app": {
+    "id": "sap.ui.demo.app",
+    "type": "application",
+    "title": "Vendor Reconcile",
+    "description": "Minimal CAP + UI5 starter"
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {},
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "rootView": {
+      "viewName": "sap.ui.demo.app.Main",
+      "type": "XML"
+    },
+    "dependencies": {
+      "minUI5Version": "1.124.0",
+      "libs": ["sap.m", "sap.ui.core"]
+    },
+    "models": {
+      "": {
+        "type": "sap.ui.model.json.JSONModel"
+      }
+    }
+  }
+}
