@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<metadata>
+  <odata.context>$metadata</odata.context>
+  <odata.metadataEtag>W/"oZuvfwDgwdF+nDXOMm5lmWsvrzn0s1PQxzE97dE5b/I="</odata.metadataEtag>
+  <value>
+    <item>
+      <name>VendorLedgerItems</name>
+      <url>VendorLedgerItems</url>
+    </item>
+    <item>
+      <name>GrirSnapshot</name>
+      <url>GrirSnapshot</url>
+    </item>
+    <item>
+      <name>VendorMaster</name>
+      <url>VendorMaster</url>
+    </item>
+    <item>
+      <name>VendorDocLines</name>
+      <url>VendorDocLines</url>
+    </item>
+    <item>
+      <name>MatchResults</name>
+      <url>MatchResults</url>
+    </item>
+    <item>
+      <name>Exceptions</name>
+      <url>Exceptions</url>
+    </item>
+    <item>
+      <name>AuditLog</name>
+      <url>AuditLog</url>
+    </item>
+  </value>
+</metadata>

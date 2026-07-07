@@ -1,0 +1,19 @@
+<mvc:View controllerName="vendordoclines.controller.Matches"
+  xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m">
+  <Table items="{/MatchResults}">
+    <columns>
+      <Column><Text text="Outcome"/></Column>
+      <Column><Text text="Rule"/></Column>
+      <Column><Text text="Amount Delta"/></Column>
+    </columns>
+    <items>
+      <ColumnListItem>
+        <cells>
+          <Text text="{outcomeCode}"/>
+          <Text text="{matchRuleApplied}"/>
+          <Text text="{amountDelta}"/>
+        </cells>
+      </ColumnListItem>
+    </items>
+  </Table>
+</mvc:View>

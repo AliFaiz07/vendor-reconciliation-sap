@@ -1,30 +1,19 @@
-# Dependencies
 node_modules/
-
-# CAP / CDS build output
+target/
+_out/
 gen/
-*.db
-*.db-shm
-*.db-wal
-sqlite.db
-.cds_gen/
 
-# Environment & secrets
-.env
-default-env.json
-*-key.json
+.cdsrc-private.json
+default-*.json
+*.sqlite
 
-# Python
-venv/
-__pycache__/
-*.pyc
+# MTA
+mta_archives/
+*_mta_build_tmp
+*.mtar
 
-# Logs
-*.log
-npm-debug.log*
-
-# Editor / OS
-.vscode/
-.idea/
+# Other
 .DS_Store
-Thumbs.db
+
+# @cap-js/cds-typer
+@cds-models

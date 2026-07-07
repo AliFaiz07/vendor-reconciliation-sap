@@ -1,0 +1,78 @@
+<mvc:View controllerName="vendordoclines.controller.Workbench"
+  xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:core="sap.ui.core">
+  <VBox class="sapUiMediumMargin">
+    <Toolbar>
+      <SegmentedButton selectedKey="{wb>/filter}" selectionChange="onFilterChange">
+        <items>
+          <SegmentedButtonItem key="ALL" text="All"/>
+          <SegmentedButtonItem key="MATCHED" text="Matched"/>
+          <SegmentedButtonItem key="EXCEPTIONS" text="Exceptions"/>
+          <SegmentedButtonItem key="UNMATCHED" text="Unmatched"/>
+          <SegmentedButtonItem key="OPEN" text="Open"/>
+        </items>
+      </SegmentedButton>
+      <SearchField width="16rem" liveChange="onSearch" placeholder="Search invoice # / PO / vendor…"/>
+    </Toolbar>
+    <Table id="wbTable" items="{wb>/rows}">
+      <columns>
+        <Column><Text text="Invoice #"/></Column>
+        <Column><Text text="Date"/></Column>
+        <Column hAlign="End"><Text text="Amount"/></Column>
+        <Column><Text text="PO"/></Column>
+        <Column><Text text="Vendor"/></Column>
+        <Column><Text text="Outcome"/></Column>
+        <Column hAlign="End"><Text text="Δ Amount"/></Column>
+        <Column><Text text="Status"/></Column>
+        <Column hAlign="End"><Text text="Actions"/></Column>
+      </columns>
+      <items>
+        <ColumnListItem type="Active" press="onOpenDetails">
+          <cells>
+            <Text text="{wb>vendorInvoiceNo}"/>
+            <Text text="{wb>invoiceDate}"/>
+            <Text text="{wb>invoiceAmount}"/>
+            <Text text="{wb>poReference}"/>
+            <Text text="{wb>sourceVendorCode}"/>
+            <ObjectStatus text="{wb>outcomeCode}" state="{wb>outcomeState}"/>
+            <Text text="{wb>amountDelta}"/>
+            <ObjectStatus text="{wb>exStatus}" state="{wb>exState}"/>
+            <HBox>
+              <Button text="Resolve" visible="{wb>canResolve}" press="onResolvePress"/>
+              <Button text="Reopen" visible="{wb>canReopen}" press="onReopenPress"/>
+            </HBox>
+          </cells>
+        </ColumnListItem>
+      </items>
+    </Table>
+  </VBox>
+
+  <Dialog id="detailsDialog" title="Invoice Details" contentWidth="640px">
+    <content>
+      <VBox class="sapUiMediumMargin">
+        <ObjectStatus text="{wb>/active/outcomeCode}" state="{wb>/active/outcomeState}" class="sapUiSmallMarginBottom"/>
+        <Text text="Rule applied: {wb>/active/matchRuleApplied}" class="sapUiSmallMarginBottom"/>
+        <Panel headerText="Vendor Statement Line">
+          <ObjectAttribute title="Invoice #" text="{wb>/active/vendorInvoiceNo}"/>
+          <ObjectAttribute title="Date" text="{wb>/active/invoiceDate}"/>
+          <ObjectAttribute title="Amount" text="{wb>/active/invoiceAmount}"/>
+          <ObjectAttribute title="Currency" text="{wb>/active/currency}"/>
+          <ObjectAttribute title="PO Reference" text="{wb>/active/poReference}"/>
+          <ObjectAttribute title="Vendor Code" text="{wb>/active/sourceVendorCode}"/>
+        </Panel>
+        <Panel headerText="Matched Ledger Item" class="sapUiSmallMarginTop">
+          <ObjectAttribute title="Accounting Doc" text="{wb>/active/ledgerDoc}"/>
+          <ObjectAttribute title="Amount" text="{wb>/active/ledgerAmount}"/>
+          <ObjectAttribute title="Cleared" text="{wb>/active/ledgerCleared}"/>
+        </Panel>
+        <TextArea id="resolutionNote" value="{wb>/active/note}" rows="3" width="100%"
+          placeholder="Explain how this exception was resolved…" class="sapUiSmallMarginTop"
+          visible="{wb>/active/hasException}" editable="{wb>/active/canEditNote}"/>
+      </VBox>
+    </content>
+    <buttons>
+      <Button text="Close" press="onCloseDetails"/>
+      <Button text="Mark RESOLVED" type="Emphasized" visible="{wb>/active/canResolve}" press="onResolveFromDialog"/>
+      <Button text="Reopen" visible="{wb>/active/canReopen}" press="onReopenFromDialog"/>
+    </buttons>
+  </Dialog>
+</mvc:View>

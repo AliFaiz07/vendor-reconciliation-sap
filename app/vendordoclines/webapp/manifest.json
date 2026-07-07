@@ -1,0 +1,29 @@
+{
+  "sap.app": {
+    "id": "vendordoclines",
+    "type": "application",
+    "dataSources": {
+      "mainService": {
+        "uri": "/api/v1/",
+        "type": "OData",
+        "settings": { "odataVersion": "4.0" }
+      }
+    }
+  },
+  "sap.ui5": {
+    "models": {
+      "": { "dataSource": "mainService", "type": "sap.ui.model.odata.v4.ODataModel" }
+    },
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.f": {},
+        "sap.ui.unified": {},
+        "sap.suite.ui.microchart": {}
+      }
+    },
+    "rootView": { "viewName": "vendordoclines.view.Main", "type": "XML", "id": "app" }
+  }
+}

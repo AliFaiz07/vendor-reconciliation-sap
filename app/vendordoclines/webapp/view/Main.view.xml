@@ -1,0 +1,79 @@
+<mvc:View controllerName="vendordoclines.controller.Main"
+  xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:core="sap.ui.core">
+  <VBox>
+    <Toolbar>
+      <uf:FileUploader id="seedUploader" xmlns:uf="sap.ui.unified" width="200px" placeholder="SAP_Ledger_Mock.xlsx"/>
+      <Button text="Seed Data" press="onSeedData"/>
+      <uf:FileUploader id="statementUploader" xmlns:uf="sap.ui.unified" width="200px" placeholder="Vendor Statement.xlsx"/>
+      <Button text="Upload &amp; Match" press="onUploadStatement" type="Emphasized"/>
+    </Toolbar>
+    <IconTabBar>
+      <items>
+        <IconTabFilter text="Vendor Doc Lines">
+          <Table items="{/VendorDocLines}">
+            <columns>
+              <Column><Text text="Invoice No"/></Column>
+              <Column><Text text="Amount"/></Column>
+              <Column><Text text="Vendor Code"/></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{vendorInvoiceNo}"/>
+                  <Text text="{invoiceAmount}"/>
+                  <Text text="{sourceVendorCode}"/>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </IconTabFilter>
+        <IconTabFilter text="Match Results">
+          <Table items="{/MatchResults}">
+            <columns>
+              <Column><Text text="Outcome"/></Column>
+              <Column><Text text="Rule"/></Column>
+              <Column><Text text="Amount Delta"/></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{outcomeCode}"/>
+                  <Text text="{matchRuleApplied}"/>
+                  <Text text="{amountDelta}"/>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </IconTabFilter>
+        <IconTabFilter text="Exceptions">
+          <Table items="{/Exceptions}">
+            <columns>
+              <Column><Text text="Outcome"/></Column>
+              <Column><Text text="Status"/></Column>
+              <Column><Text text="Action"/></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{outcomeCode}"/>
+                  <Text text="{status}"/>
+                  <Button text="Resolve" press="onResolveException">
+                    <customData>
+                      <core:CustomData key="exceptionId" value="{ID}"/>
+                    </customData>
+                  </Button>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </IconTabFilter>
+        <IconTabFilter text="Workbench">
+          <mvc:XMLView viewName="vendordoclines.view.Workbench"/>
+        </IconTabFilter>
+        <IconTabFilter text="Cockpit">
+          <mvc:XMLView viewName="vendordoclines.view.Cockpit"/>
+        </IconTabFilter>
+      </items>
+    </IconTabBar>
+  </VBox>
+</mvc:View>
