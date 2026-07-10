@@ -1,0 +1,295 @@
+<mvc:View controllerName="vendordoclines.controller.ARDashboard"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns="sap.m"
+          xmlns:l="sap.ui.layout"
+          xmlns:core="sap.ui.core">
+
+  <Page title="AR Receivables Monitor" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button icon="sap-icon://log" text="Logout" type="Reject" press="onLogout"/>
+    </headerContent>
+
+    <VBox>
+      <!-- Dark Header -->
+      <core:HTML preferDOM="false"
+        content="&lt;div class='vrCockpitHeader'&gt;&lt;div class='vrCockpitHeaderInner'&gt;&lt;div class='vrCockpitHeaderTitle'&gt;AR Receivables Monitor&lt;/div&gt;&lt;div class='vrCockpitHeaderSubtitle'&gt;Accounts Receivable &amp;middot; Collection Analytics &amp;middot; Dispute Settlement&lt;/div&gt;&lt;/div&gt;&lt;div class='vrCockpitHeaderActions'&gt;Last refreshed: Today 09:30 AM&lt;/div&gt;&lt;/div&gt;"/>
+
+      <!-- Action buttons row -->
+      <Toolbar design="Solid">
+        <ToolbarSpacer/>
+        <Button text="Refresh" icon="sap-icon://refresh" press="loadKpis" type="Ghost"/>
+      </Toolbar>
+
+      <!-- Alert Strip -->
+      <MessageStrip class="vrAlertStrip"
+        text="Attention: Total overdue AR balances exceed ₹2,50,000. DSO is currently at 34 days."
+        type="Warning" showIcon="true" showCloseButton="false"/>
+
+      <VBox class="sapUiMediumMargin">
+        <!-- KPI Cards -->
+        <core:HTML preferDOM="false" content="&lt;div class='vrSectionLabel'&gt;Key Performance Indicators&lt;/div&gt;"/>
+        
+        <HBox wrap="Wrap" class="sapUiTinyMarginBottom">
+          <GenericTile header="Total AR Balance" subheader="Active receivables" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{ar>/totalARBalance}" icon="sap-icon://money-bills" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Collected This Month" subheader="Cleared inflows" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{ar>/collectedThisMonth}" valueColor="Good" icon="sap-icon://accept" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="DSO (Days)" subheader="Days Sales Outstanding" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{ar>/dsoDays}" valueColor="Warning" icon="sap-icon://date-time" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Overdue > 60 Days" subheader="High risk items" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{ar>/overdue60Days}" valueColor="Error" icon="sap-icon://status-critical" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Active Disputes" subheader="Under review" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{ar>/activeDisputes}" valueColor="Critical" icon="sap-icon://alert" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Collection Rate" subheader="Target performance" class="sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{ar>/collectionRate}" scale="%" valueColor="Good" icon="sap-icon://trend-up" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+        </HBox>
+
+        <!-- Progress Metrics -->
+        <Panel class="vrCard sapUiSmallMarginBottom" backgroundDesign="Transparent">
+          <headerToolbar>
+            <Toolbar design="Transparent">
+              <Title text="Collection Performance Monitor" level="H5" class="vrCardTitle"/>
+            </Toolbar>
+          </headerToolbar>
+          <VBox class="sapUiSmallMarginBeginEnd sapUiTinyMarginBottom">
+            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom sapUiTinyMarginTop">
+              <Label text="Collection Rate" design="Bold" class="vrLabelGreen"/>
+              <Text text="{ar>/collectionRatePct}%" class="vrMuted"/>
+            </HBox>
+            <ProgressIndicator percentValue="{ar>/collectionRatePct}" displayValue="{ar>/collectionRatePct}%" state="Success" class="sapUiTinyMarginBottom"/>
+
+            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+              <Label text="Disputed Ratio" design="Bold" class="vrLabelOrange"/>
+              <Text text="{ar>/disputeRatePct}%" class="vrMuted"/>
+            </HBox>
+            <ProgressIndicator percentValue="{ar>/disputeRatePct}" displayValue="{ar>/disputeRatePct}%" state="Warning" class="sapUiTinyMarginBottom"/>
+
+            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+              <Label text="On-Time Payment Compliance" design="Bold" class="vrLabelGreen"/>
+              <Text text="{ar>/onTimePct}%" class="vrMuted"/>
+            </HBox>
+            <ProgressIndicator percentValue="{ar>/onTimePct}" displayValue="{ar>/onTimePct}%" state="Success" class="sapUiTinyMarginBottom"/>
+          </VBox>
+        </Panel>
+
+        <!-- Grid Row: Aging + Collection Trend + Dispute Resolution -->
+        <l:Grid defaultSpan="XL4 L4 M6 S12" class="sapUiSmallMarginBottom">
+          <!-- Receivables Aging -->
+          <Panel class="vrCard" backgroundDesign="Transparent">
+            <headerToolbar>
+              <Toolbar design="Transparent">
+                <Title text="Receivables Aging Buckets" level="H5" class="vrCardTitle"/>
+              </Toolbar>
+            </headerToolbar>
+            <VBox class="sapUiSmallMarginBeginEnd">
+              <VBox class="sapUiTinyMarginBottom">
+                <HBox justifyContent="SpaceBetween">
+                  <ObjectStatus text="0–30 Days" state="Success" icon="sap-icon://status-completed"/>
+                  <Text text="{ar>/aging0_30}%" class="vrSmall"/>
+                </HBox>
+                <ProgressIndicator percentValue="{ar>/aging0_30}" displayValue="{ar>/aging0_30}%" state="Success" class="sapUiTinyMarginTop"/>
+              </VBox>
+              <VBox class="sapUiTinyMarginBottom">
+                <HBox justifyContent="SpaceBetween">
+                  <ObjectStatus text="31–60 Days" state="Warning" icon="sap-icon://status-in-process"/>
+                  <Text text="{ar>/aging31_60}%" class="vrSmall"/>
+                </HBox>
+                <ProgressIndicator percentValue="{ar>/aging31_60}" displayValue="{ar>/aging31_60}%" state="Warning" class="sapUiTinyMarginTop"/>
+              </VBox>
+              <VBox class="sapUiTinyMarginBottom">
+                <HBox justifyContent="SpaceBetween">
+                  <ObjectStatus text="61–90 Days" state="Error" icon="sap-icon://status-critical"/>
+                  <Text text="{ar>/aging61_90}%" class="vrSmall"/>
+                </HBox>
+                <ProgressIndicator percentValue="{ar>/aging61_90}" displayValue="{ar>/aging61_90}%" state="Error" class="sapUiTinyMarginTop"/>
+              </VBox>
+              <VBox class="sapUiTinyMarginBottom">
+                <HBox justifyContent="SpaceBetween">
+                  <ObjectStatus text="90+ Days" state="Error" icon="sap-icon://status-critical"/>
+                  <Text text="{ar>/aging90plus}%" class="vrSmall"/>
+                </HBox>
+                <ProgressIndicator percentValue="{ar>/aging90plus}" displayValue="{ar>/aging90plus}%" state="Error" class="sapUiTinyMarginTop"/>
+              </VBox>
+            </VBox>
+          </Panel>
+
+          <!-- Collection vs Target -->
+          <Panel class="vrCard" backgroundDesign="Transparent">
+            <headerToolbar>
+              <Toolbar design="Transparent">
+                <Title text="Collection Trend (Mon-Fri)" level="H5" class="vrCardTitle"/>
+              </Toolbar>
+            </headerToolbar>
+            <VBox class="sapUiSmallMarginBeginEnd" alignItems="Center">
+              <!-- SVG chart showing collection vs target -->
+              <core:HTML content="&lt;svg viewBox='0 0 200 120' width='160' height='120' xmlns='http://www.w3.org/2000/svg'&gt;&lt;line x1='10' y1='100' x2='190' y2='100' stroke='#E5E5E5' stroke-width='2'/&gt;&lt;rect x='20' y='40' width='12' height='60' fill='#0070F2' rx='1'/&gt;&lt;rect x='34' y='50' width='12' height='50' fill='#9E9E9E' rx='1'/&gt;&lt;rect x='55' y='30' width='12' height='70' fill='#0070F2' rx='1'/&gt;&lt;rect x='69' y='30' width='12' height='70' fill='#9E9E9E' rx='1'/&gt;&lt;rect x='90' y='20' width='12' height='80' fill='#0070F2' rx='1'/&gt;&lt;rect x='104' y='40' width='12' height='60' fill='#9E9E9E' rx='1'/&gt;&lt;rect x='125' y='50' width='12' height='50' fill='#0070F2' rx='1'/&gt;&lt;rect x='139' y='30' width='12' height='70' fill='#9E9E9E' rx='1'/&gt;&lt;rect x='160' y='10' width='12' height='90' fill='#0070F2' rx='1'/&gt;&lt;rect x='174' y='20' width='12' height='80' fill='#9E9E9E' rx='1'/&gt;&lt;/svg&gt;" preferDOM="false"/>
+              <HBox justifyContent="Center" wrap="Wrap" class="sapUiTinyMarginTop">
+                <HBox alignItems="Center" class="sapUiTinyMarginEnd">
+                  <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot' style='background:#0070F2'&gt;&lt;/span&gt;"/>
+                  <Text text="Collected" class="vrSmall"/>
+                </HBox>
+                <HBox alignItems="Center">
+                  <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot' style='background:#9E9E9E'&gt;&lt;/span&gt;"/>
+                  <Text text="Target" class="vrSmall"/>
+                </HBox>
+              </HBox>
+            </VBox>
+          </Panel>
+
+          <!-- Dispute Resolution -->
+          <Panel class="vrCard" backgroundDesign="Transparent">
+            <headerToolbar>
+              <Toolbar design="Transparent">
+                <Title text="Dispute Resolution Rate" level="H5" class="vrCardTitle"/>
+              </Toolbar>
+            </headerToolbar>
+            <VBox class="sapUiSmallMarginBeginEnd">
+              <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                <Text text="Disputes Raised" class="vrSmall"/>
+                <ObjectStatus text="3 items" state="Error"/>
+              </HBox>
+              <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                <Text text="Resolved This Week" class="vrSmall"/>
+                <ObjectStatus text="2 items" state="Success"/>
+              </HBox>
+              <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                <Text text="Pending Review" class="vrSmall"/>
+                <ObjectStatus text="1 item" state="Warning"/>
+              </HBox>
+              <ProgressIndicator percentValue="66" displayValue="66% Resolved" state="Warning" class="sapUiTinyMarginTop"/>
+            </VBox>
+          </Panel>
+        </l:Grid>
+
+        <!-- Worklists IconTabBar -->
+        <Panel class="vrCard sapUiSmallMarginBottom" backgroundDesign="Transparent">
+          <headerToolbar>
+            <Toolbar design="Transparent">
+              <Title text="AR Receivables Worklist" level="H5" class="vrCardTitle"/>
+            </Toolbar>
+          </headerToolbar>
+
+          <IconTabBar>
+            <items>
+              <IconTabFilter text="Overdue Invoices" icon="sap-icon://invoice" iconColor="Negative">
+                <content>
+                  <Table items="{ar>/overdueInvoices}" fixedLayout="false">
+                    <columns>
+                      <Column><Text text="Invoice No"/></Column>
+                      <Column><Text text="Buyer / Customer"/></Column>
+                      <Column hAlign="Right"><Text text="Amount"/></Column>
+                      <Column hAlign="Center"><Text text="Due Date"/></Column>
+                      <Column hAlign="Center"><Text text="Days Overdue"/></Column>
+                    </columns>
+                    <items>
+                      <ColumnListItem>
+                        <cells>
+                          <Text text="{ar>invoiceNo}" class="vrCode"/>
+                          <Text text="{ar>buyer}"/>
+                          <Text text="{ar>amount}" class="vrBold"/>
+                          <Text text="{ar>dueDate}"/>
+                          <ObjectStatus text="{ar>daysOverdue} days" state="{ar>daysState}" icon="sap-icon://date-time"/>
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                  </Table>
+                </content>
+              </IconTabFilter>
+
+              <IconTabFilter text="Active Disputes" icon="sap-icon://alert" iconColor="Critical">
+                <content>
+                  <Table items="{ar>/activeDisputesList}" fixedLayout="false">
+                    <columns>
+                      <Column><Text text="Dispute ID"/></Column>
+                      <Column><Text text="Invoice No"/></Column>
+                      <Column><Text text="Reason"/></Column>
+                      <Column hAlign="Right"><Text text="Disputed Amount"/></Column>
+                      <Column hAlign="Center"><Text text="Status"/></Column>
+                      <Column hAlign="Center"><Text text="Raised On"/></Column>
+                    </columns>
+                    <items>
+                      <ColumnListItem>
+                        <cells>
+                          <Text text="{ar>disputeId}" class="vrCode"/>
+                          <Text text="{ar>invoiceNo}" class="vrCode"/>
+                          <Text text="{ar>reason}"/>
+                          <Text text="{ar>amount}" class="vrBold"/>
+                          <ObjectStatus text="{ar>status}" state="{ar>statusState}"/>
+                          <Text text="{ar>raisedOn}"/>
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                  </Table>
+                </content>
+              </IconTabFilter>
+
+              <IconTabFilter text="Payment Confirmations" icon="sap-icon://sys-enter-2" iconColor="Positive">
+                <content>
+                  <Table items="{ar>/paymentConfirmations}" fixedLayout="false">
+                    <columns>
+                      <Column><Text text="Payment Reference"/></Column>
+                      <Column><Text text="Date Confirmed"/></Column>
+                      <Column hAlign="Right"><Text text="Amount"/></Column>
+                      <Column><Text text="Bank Ref"/></Column>
+                      <Column><Text text="Confirmed By"/></Column>
+                    </columns>
+                    <items>
+                      <ColumnListItem>
+                        <cells>
+                          <Text text="{ar>payRef}" class="vrCode"/>
+                          <Text text="{ar>date}"/>
+                          <Text text="{ar>amount}" class="vrBold"/>
+                          <Text text="{ar>bankRef}"/>
+                          <Text text="{ar>confirmedBy}"/>
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                  </Table>
+                </content>
+              </IconTabFilter>
+            </items>
+          </IconTabBar>
+        </Panel>
+
+        <!-- Quick Actions -->
+        <Panel class="vrQuickActions" backgroundDesign="Transparent">
+          <headerToolbar>
+            <Toolbar design="Transparent">
+              <Title text="Quick Actions" level="H5" class="vrCardTitle"/>
+            </Toolbar>
+          </headerToolbar>
+          <HBox class="sapUiSmallMarginBeginEnd sapUiTinyMarginBottom" wrap="Wrap">
+            <Button text="Raise Dispute Case" icon="sap-icon://reject" type="Reject" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+            <Button text="Send Payment Reminder" icon="sap-icon://email" type="Emphasized" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+            <Button text="Mark Payment Received" icon="sap-icon://accept" type="Accept" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+            <Button text="Export Aging Report" icon="sap-icon://excel-attachment" type="Ghost" class="sapUiTinyMarginBottom"/>
+          </HBox>
+        </Panel>
+
+      </VBox>
+    </VBox>
+  </Page>
+</mvc:View>

@@ -1,4 +1,4 @@
 ID,businessPartner,businessPartnerName,taxNumber1,paymentTerms,currency
 b1a1,V1001,Acme Supplies Pvt Ltd,GSTIN29AAAAA0000A1Z5,NT30,INR
 b1a2,V1002,Bharat Traders,GSTIN27BBBBB0000B1Z2,NT45,INR
-b1a4,1000482,Sigma Components Pvt. Ltd.,27AAAAA0000A1Z5,Z030,INR
+b1a3,1000507,Sigma Components Pvt Ltd,GSTIN33CCCCC2222C3Z7,NT30,INR

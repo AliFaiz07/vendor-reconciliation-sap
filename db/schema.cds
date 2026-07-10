@@ -51,6 +51,7 @@ entity MatchResults : cuid, managed {
   outcomeCode      : String(40);
   amountDelta      : Decimal(15,2);
   matchRuleApplied : String(40);
+  businessRole     : String(30);
 }
 
 entity Exceptions : cuid, managed {
@@ -69,4 +70,20 @@ entity AuditLog : cuid, managed {
   performedBy    : String(80);
   afterValue     : LargeString;
   performedAt    : Timestamp;
+}
+
+entity Users : cuid {
+  username     : String(50);
+  email        : String(100);
+  passwordHash : String(200);
+  fullName     : String(100);
+  businessRole : String(30);
+}
+
+entity PurchaseOrders : cuid, managed {
+  purchaseOrder : String(10);
+  poItem        : String(5);
+  poQty         : Decimal(13,3);
+  poAmount      : Decimal(15,2);
+  supplier      : String(10);
 }

@@ -21,9 +21,47 @@
         "sap.ui.core": {},
         "sap.f": {},
         "sap.ui.unified": {},
-        "sap.suite.ui.microchart": {}
+        "sap.ui.layout": {}
       }
     },
-    "rootView": { "viewName": "vendordoclines.view.Main", "type": "XML", "id": "app" }
+    "resources": {
+      "css": [
+        { "uri": "css/cockpit.css" }
+      ]
+    },
+    "rootView": { "viewName": "vendordoclines.view.App", "type": "XML", "id": "app" },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "viewPath": "vendordoclines.view",
+        "controlAggregation": "pages",
+        "controlId": "appNavContainer",
+        "transition": "slide",
+        "async": true
+      },
+      "routes": [
+        { "pattern": "", "name": "login", "target": "login" },
+        { "pattern": "register", "name": "register", "target": "register" },
+        { "pattern": "home", "name": "home", "target": "home" },
+        { "pattern": "workbench", "name": "workbench", "target": "workbench" },
+        { "pattern": "main", "name": "main", "target": "main" },
+        { "pattern": "billing", "name": "billing", "target": "billing" },
+        { "pattern": "ar", "name": "ar", "target": "ar" },
+        { "pattern": "gr", "name": "gr", "target": "gr" },
+        { "pattern": "miro", "name": "miro", "target": "miro" }
+      ],
+      "targets": {
+        "login":     { "viewName": "Login",           "viewLevel": 1 },
+        "register":  { "viewName": "Register",        "viewLevel": 1 },
+        "home":      { "viewName": "Home",            "viewLevel": 2 },
+        "workbench": { "viewName": "PersonaWorkbench","viewLevel": 2 },
+        "main":      { "viewName": "Main",            "viewLevel": 3 },
+        "billing":   { "viewName": "BillingDashboard","viewLevel": 3 },
+        "ar":        { "viewName": "ARDashboard",     "viewLevel": 3 },
+        "gr":        { "viewName": "GRWorkbench",     "viewLevel": 3 },
+        "miro":      { "viewName": "MIROWorkbench",   "viewLevel": 3 }
+      }
+    }
   }
 }

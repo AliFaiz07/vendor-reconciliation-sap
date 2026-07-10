@@ -6,15 +6,17 @@ module.exports = (srv) => {
   srv.on('seedSapMockData', async (req) => {
     const { fileBase64 } = req.data;
     const workbook = XLSX.read(Buffer.from(fileBase64, 'base64'), { type: 'buffer' });
-    const { VendorLedgerItems, GrirSnapshot, VendorMaster } = cds.entities;
+    const { VendorLedgerItems, GrirSnapshot, VendorMaster, PurchaseOrders } = cds.entities;
 
     const ledgerSheet = parseSheet(workbook.Sheets['VendorLedgerItems'], 'Supplier');
     const grirSheet   = parseSheet(workbook.Sheets['GrirSnapshot'], 'PurchaseOrder');
     const masterSheet = parseSheet(workbook.Sheets['VendorMaster'], 'BusinessPartner');
+    const poSheet     = workbook.Sheets['PurchaseOrders'] ? parseSheet(workbook.Sheets['PurchaseOrders'], 'PurchaseOrder') : [];
 
     await DELETE.from(VendorLedgerItems);
     await DELETE.from(GrirSnapshot);
     await DELETE.from(VendorMaster);
+    await DELETE.from(PurchaseOrders);
 
     await INSERT.into(VendorLedgerItems).entries(ledgerSheet.map(row => ({
       ID: cds.utils.uuid(),
@@ -50,6 +52,17 @@ module.exports = (srv) => {
       currency: row.Currency,
     })));
 
-    return `Seeded: ${ledgerSheet.length} ledger items, ${grirSheet.length} GR/IR rows, ${masterSheet.length} vendors`;
+    if (poSheet.length) {
+      await INSERT.into(PurchaseOrders).entries(poSheet.map(row => ({
+        ID: cds.utils.uuid(),
+        purchaseOrder: String(row.PurchaseOrder),
+        poItem: String(row.PurchaseOrderItem || row.PoItem),
+        poQty: row.PoQty || row.PurchaseOrderQty || 0,
+        poAmount: row.PoAmount || row.PurchaseOrderAmount || 0,
+        supplier: String(row.Supplier),
+      })));
+    }
+
+    return `Seeded: ${ledgerSheet.length} ledger items, ${grirSheet.length} GR/IR rows, ${masterSheet.length} vendors, ${poSheet.length} PO rows`;
   });
 };

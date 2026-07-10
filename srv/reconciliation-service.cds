@@ -13,4 +13,7 @@ service ReconciliationService @(path:'/api/v1') {
   action resolveException(exceptionId: UUID, note: String) returns String;
   action reopenException(exceptionId: UUID) returns String;
   function getCockpitKpis() returns String;
+
+  action register(username: String, email: String, password: String, fullName: String, businessRole: String) returns String;
+  action login(username: String, password: String) returns String;
 }

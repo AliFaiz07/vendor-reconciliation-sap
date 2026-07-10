@@ -1,0 +1,22 @@
+<mvc:View controllerName="vendordoclines.controller.PersonaWorkbench" xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m">
+  <Page title="{persona>/workbenchLabel} Workbench">
+    <VBox class="sapUiMediumMargin">
+      <Table id="personaTable" items="{persona>/rows}">
+        <columns>
+          <Column><Text text="Invoice #"/></Column>
+          <Column><Text text="Outcome"/></Column>
+          <Column><Text text="Status"/></Column>
+        </columns>
+        <items>
+          <ColumnListItem>
+            <cells>
+              <Text text="{persona>vendorInvoiceNo}"/>
+              <ObjectStatus text="{persona>outcomeCode}" state="{persona>outcomeState}"/>
+              <ObjectStatus text="{persona>exStatus}" state="{persona>exState}"/>
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+    </VBox>
+  </Page>
+</mvc:View>

@@ -1,15 +1,34 @@
-<mvc:View controllerName="vendordoclines.controller.Main"
-  xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:core="sap.ui.core">
-  <VBox>
-    <Toolbar>
-      <uf:FileUploader id="seedUploader" xmlns:uf="sap.ui.unified" width="200px" placeholder="SAP_Ledger_Mock.xlsx"/>
-      <Button text="Seed Data" press="onSeedData"/>
-      <uf:FileUploader id="statementUploader" xmlns:uf="sap.ui.unified" width="200px" placeholder="Vendor Statement.xlsx"/>
-      <Button text="Upload &amp; Match" press="onUploadStatement" type="Emphasized"/>
-    </Toolbar>
-    <IconTabBar>
+<mvc:View controllerName="vendordoclines.controller.Main" xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:core="sap.ui.core">
+  <Page title="AP Dashboard — Vendor Reconciliation" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button icon="sap-icon://log" text="Logout" type="Reject" press="onLogout"/>
+    </headerContent>
+    <VBox>
+    <Panel headerText="Data Management &amp; Intake Center" expandable="true" expanded="true" class="sapUiSmallMargin">
+      <HBox alignContent="Center" alignItems="Center" wrap="Wrap">
+        <VBox class="sapUiSmallMarginEnd">
+          <Label text="SAP Ledger / ERP Master Data" design="Bold"/>
+          <HBox>
+            <uf:FileUploader id="sapLedgerUploader" xmlns:uf="sap.ui.unified" width="280px" placeholder="Select SAP_Ledger_Mock.xlsx..."/>
+            <Button text="Upload SAP Ledger" press="onUploadSapLedger" icon="sap-icon://upload"/>
+          </HBox>
+        </VBox>
+        <VBox class="sapUiSmallMarginEnd">
+          <Label text="Vendor Invoice Statement" design="Bold"/>
+          <HBox>
+            <uf:FileUploader id="statementUploader" xmlns:uf="sap.ui.unified" width="280px" placeholder="Select Vendor Statement.xlsx..."/>
+            <Button text="Upload Vendor Statement" press="onUploadStatement" type="Emphasized" icon="sap-icon://upload"/>
+          </HBox>
+        </VBox>
+        <VBox justifyContent="End" height="100%">
+          <Label text="Reconciliation Engine"/>
+          <Button text="Run Matching" press="onRunMatching" type="Accept" icon="sap-icon://play"/>
+        </VBox>
+      </HBox>
+    </Panel>
+    <IconTabBar id="mainTabBar" select="onTabSelect">
       <items>
-        <IconTabFilter text="Vendor Doc Lines">
+        <IconTabFilter text="Vendor Doc Lines" key="lines">
           <Table items="{/VendorDocLines}">
             <columns>
               <Column><Text text="Invoice No"/></Column>
@@ -27,7 +46,7 @@
             </items>
           </Table>
         </IconTabFilter>
-        <IconTabFilter text="Match Results">
+        <IconTabFilter text="Match Results" key="results">
           <Table items="{/MatchResults}">
             <columns>
               <Column><Text text="Outcome"/></Column>
@@ -37,7 +56,7 @@
             <items>
               <ColumnListItem>
                 <cells>
-                  <Text text="{outcomeCode}"/>
+                  <ObjectStatus text="{outcomeCode}" state="{= ${outcomeCode} === 'MATCHED' || ${outcomeCode} === 'MATCHED/3WAY' ? 'Success' : (${outcomeCode}.indexOf('UNMATCHED') !== -1 ? 'Error' : 'Warning') }"/>
                   <Text text="{matchRuleApplied}"/>
                   <Text text="{amountDelta}"/>
                 </cells>
@@ -45,7 +64,7 @@
             </items>
           </Table>
         </IconTabFilter>
-        <IconTabFilter text="Exceptions">
+        <IconTabFilter text="Exceptions" key="exceptions">
           <Table items="{/Exceptions}">
             <columns>
               <Column><Text text="Outcome"/></Column>
@@ -55,8 +74,8 @@
             <items>
               <ColumnListItem>
                 <cells>
-                  <Text text="{outcomeCode}"/>
-                  <Text text="{status}"/>
+                  <ObjectStatus text="{outcomeCode}" state="{= ${outcomeCode} === 'MATCHED' || ${outcomeCode} === 'MATCHED/3WAY' ? 'Success' : (${outcomeCode}.indexOf('UNMATCHED') !== -1 ? 'Error' : 'Warning') }"/>
+                  <ObjectStatus text="{status}" state="{= ${status} === 'RESOLVED' ? 'Success' : 'Warning' }"/>
                   <Button text="Resolve" press="onResolveException">
                     <customData>
                       <core:CustomData key="exceptionId" value="{ID}"/>
@@ -67,13 +86,14 @@
             </items>
           </Table>
         </IconTabFilter>
-        <IconTabFilter text="Workbench">
-          <mvc:XMLView viewName="vendordoclines.view.Workbench"/>
+        <IconTabFilter text="Workbench" key="workbench">
+          <mvc:XMLView id="workbenchView" viewName="vendordoclines.view.Workbench"/>
         </IconTabFilter>
-        <IconTabFilter text="Cockpit">
-          <mvc:XMLView viewName="vendordoclines.view.Cockpit"/>
+        <IconTabFilter text="Cockpit" key="cockpit">
+          <mvc:XMLView id="cockpitView" viewName="vendordoclines.view.Cockpit"/>
         </IconTabFilter>
       </items>
     </IconTabBar>
-  </VBox>
+    </VBox>
+  </Page>
 </mvc:View>

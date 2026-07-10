@@ -7,7 +7,6 @@ sap.ui.define([
       this.getView().setModel(new JSONModel({ filter: "ALL", search: "", rows: [], active: null }), "wb");
       this.loadData();
     },
-
     loadData: function () {
       Promise.all([
         fetch("/api/v1/VendorDocLines").then(r => r.json()),
@@ -39,15 +38,13 @@ sap.ui.define([
           };
         });
         this._applyFilter();
-      });
+      }).catch(e => MessageToast.show("Load error: " + e.message));
     },
-
     _tone: function (code) {
       if (code === "MATCHED") return "Success";
       if (code.startsWith("UNMATCHED")) return "Error";
       return "Warning";
     },
-
     _applyFilter: function () {
       const model = this.getView().getModel("wb");
       const filter = model.getProperty("/filter");
@@ -60,25 +57,20 @@ sap.ui.define([
       if (q) rows = rows.filter(r => `${r.vendorInvoiceNo} ${r.poReference} ${r.sourceVendorCode}`.toLowerCase().includes(q));
       model.setProperty("/rows", rows);
     },
-
     onFilterChange: function (oEvent) {
       this.getView().getModel("wb").setProperty("/filter", oEvent.getParameter("item").getKey());
       this._applyFilter();
     },
-
     onSearch: function (oEvent) {
       this.getView().getModel("wb").setProperty("/search", oEvent.getParameter("newValue"));
       this._applyFilter();
     },
-
     onOpenDetails: function (oEvent) {
       const ctx = oEvent.getSource().getBindingContext("wb").getObject();
       this.getView().getModel("wb").setProperty("/active", { ...ctx, hasException: !!ctx.exceptionId, canEditNote: ctx.exStatus === "OPEN" });
       this.byId("detailsDialog").open();
     },
-
     onCloseDetails: function () { this.byId("detailsDialog").close(); },
-
     _resolve: function (exceptionId, note) {
       const model = this.getView().getModel();
       const ctx = model.bindContext("/resolveException(...)");
@@ -86,14 +78,12 @@ sap.ui.define([
       ctx.setParameter("note", note || "");
       ctx.execute().then(() => { MessageToast.show("Exception marked RESOLVED"); this.loadData(); });
     },
-
     _reopen: function (exceptionId) {
       const model = this.getView().getModel();
       const ctx = model.bindContext("/reopenException(...)");
       ctx.setParameter("exceptionId", exceptionId);
       ctx.execute().then(() => { MessageToast.show("Exception reopened"); this.loadData(); });
     },
-
     onResolvePress: function (oEvent) {
       const row = oEvent.getSource().getBindingContext("wb").getObject();
       this._resolve(row.exceptionId, "");

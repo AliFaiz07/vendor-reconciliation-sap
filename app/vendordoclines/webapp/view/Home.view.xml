@@ -1,0 +1,21 @@
+<mvc:View controllerName="vendordoclines.controller.Home" xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m">
+  <Page title="Vendor Reconciliation — Home" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button icon="sap-icon://log" text="Logout" type="Reject" press="onLogout"/>
+    </headerContent>
+    <VBox class="sapUiMediumMargin">
+      <Title text="Welcome, {home>/fullName}" level="H1" class="sapUiSmallMarginBottom"/>
+      <Text text="Role: {home>/businessRole}" class="sapUiMediumMarginBottom"/>
+      <HBox wrap="Wrap" class="sapUiMediumMarginBottom">
+        <GenericTile header="Matched" subheader="lines" class="sapUiTinyMarginEnd" frameType="TwoByOne">
+          <TileContent><NumericContent value="{home>/kpis/matchedCount}" valueColor="Good"/></TileContent>
+        </GenericTile>
+        <GenericTile header="Exceptions" subheader="open" class="sapUiTinyMarginEnd" frameType="TwoByOne">
+          <TileContent><NumericContent value="{home>/kpis/exceptionCount}" valueColor="Critical"/></TileContent>
+        </GenericTile>
+      </HBox>
+      <Title text="Your Workbench" level="H3" class="sapUiSmallMarginBottom"/>
+      <GenericTile header="{home>/workbenchLabel}" subheader="Open workbench" press="onOpenWorkbench" frameType="OneByOne" class="sapUiTinyMarginEnd"/>
+    </VBox>
+  </Page>
+</mvc:View>

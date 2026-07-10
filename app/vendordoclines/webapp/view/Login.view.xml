@@ -1,0 +1,17 @@
+<mvc:View controllerName="vendordoclines.controller.Login" xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m">
+  <Page title="Vendor Reconciliation — Login" showHeader="false">
+    <VBox alignItems="Center" justifyContent="Center" height="100%" class="sapUiLargeMargin">
+      <Panel width="400px" class="sapUiMediumMargin">
+        <VBox class="sapUiMediumMargin">
+          <Title text="Sign In" level="H2" class="sapUiSmallMarginBottom"/>
+          <Label text="Username"/>
+          <Input id="loginUsername" class="sapUiSmallMarginBottom"/>
+          <Label text="Password"/>
+          <Input id="loginPassword" type="Password" class="sapUiMediumMarginBottom"/>
+          <Button text="Login" type="Emphasized" press="onLogin" width="100%"/>
+          <Button text="Register" press="onGoRegister" width="100%" class="sapUiTinyMarginTop"/>
+        </VBox>
+      </Panel>
+    </VBox>
+  </Page>
+</mvc:View>

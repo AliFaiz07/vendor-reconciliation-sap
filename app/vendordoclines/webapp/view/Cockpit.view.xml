@@ -1,25 +1,514 @@
 <mvc:View controllerName="vendordoclines.controller.Cockpit"
-  xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m">
-  <VBox class="sapUiMediumMargin">
-    <Title text="Reconciliation Cockpit" level="H2" class="sapUiSmallMarginBottom"/>
-    <HBox wrap="Wrap">
-      <GenericTile header="Matched" subheader="{cockpit>/matchRate}% of lines" class="sapUiTinyMarginEnd" frameType="TwoByOne">
-        <TileContent><NumericContent value="{cockpit>/matchedCount}" valueColor="Good"/></TileContent>
-      </GenericTile>
-      <GenericTile header="Exceptions" subheader="{cockpit>/openEx} open · {cockpit>/resolvedEx} resolved" class="sapUiTinyMarginEnd" frameType="TwoByOne">
-        <TileContent><NumericContent value="{cockpit>/exceptionCount}" valueColor="Critical"/></TileContent>
-      </GenericTile>
-      <GenericTile header="Unmatched" subheader="lines" class="sapUiTinyMarginEnd" frameType="TwoByOne">
-        <TileContent><NumericContent value="{cockpit>/unmatchedCount}" valueColor="Error"/></TileContent>
-      </GenericTile>
-      <GenericTile header="Total Processed" subheader="all lines" class="sapUiTinyMarginEnd" frameType="TwoByOne">
-        <TileContent><NumericContent value="{cockpit>/totalLines}"/></TileContent>
-      </GenericTile>
-    </HBox>
-    <Panel headerText="Outcome Breakdown" class="sapUiMediumMarginTop">
-      <List items="{cockpit>/reasonList}">
-        <StandardListItem title="{cockpit>reason}" info="{cockpit>count}"/>
-      </List>
-    </Panel>
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns="sap.m"
+          xmlns:l="sap.ui.layout"
+          xmlns:core="sap.ui.core">
+
+  <VBox>
+
+    <!-- ═══ DARK HEADER (pure HTML — SAP controls don't support style attr) ══ -->
+    <core:HTML preferDOM="false"
+      content="&lt;div class='vrCockpitHeader'&gt;&lt;div class='vrCockpitHeaderInner'&gt;&lt;div class='vrCockpitHeaderTitle'&gt;Vendor Reconciliation Cockpit&lt;/div&gt;&lt;div class='vrCockpitHeaderSubtitle'&gt;Accounts Payable &amp;middot; Statement Matching &amp;middot; Real-time Analytics&lt;/div&gt;&lt;/div&gt;&lt;div class='vrCockpitHeaderActions'&gt;Last refreshed: Today 09:30 AM&lt;/div&gt;&lt;/div&gt;"/>
+
+    <!-- Action buttons row under the header -->
+    <Toolbar design="Solid">
+      <ToolbarSpacer/>
+      <Button text="Export Report" icon="sap-icon://excel-attachment" type="Ghost" class="sapUiTinyMarginEnd"/>
+      <Button text="Refresh" icon="sap-icon://refresh" press="loadKpis" type="Ghost"/>
+    </Toolbar>
+
+    <!-- ═══ ALERT STRIP ════════════════════════════════════════════════════ -->
+    <MessageStrip class="vrAlertStrip"
+      text="{cockpit>/openEx} open exceptions require AP review · Unresolved variance: {cockpit>/totalDeltaFmt} · {cockpit>/partialCount} lines partially matched"
+      type="Warning" showIcon="true" showCloseButton="false"/>
+
+    <VBox class="sapUiMediumMargin">
+
+      <!-- ═══ SECTION 1: KPI TILES ══════════════════════════════════════════ -->
+      <core:HTML preferDOM="false"
+        content="&lt;div class='vrSectionLabel'&gt;Key Performance Indicators&lt;/div&gt;"/>
+
+      <HBox wrap="Wrap" class="sapUiTinyMarginBottom">
+
+        <GenericTile header="Vendor Statements" subheader="Uploaded this period"
+                     class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+          <TileContent>
+            <NumericContent value="{cockpit>/totalVendorStatements}" icon="sap-icon://documents" withMargin="false"/>
+          </TileContent>
+        </GenericTile>
+
+        <GenericTile header="SAP Ledger Records" subheader="ERP accounting documents"
+                     class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+          <TileContent>
+            <NumericContent value="{cockpit>/totalLedgerRecords}" icon="sap-icon://database" withMargin="false"/>
+          </TileContent>
+        </GenericTile>
+
+        <GenericTile header="Auto-Match Rate" subheader="Engine accuracy"
+                     class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+          <TileContent>
+            <NumericContent value="{cockpit>/matchRate}" scale="%" valueColor="Good"
+                            icon="sap-icon://trend-up" withMargin="false"/>
+          </TileContent>
+        </GenericTile>
+
+        <GenericTile header="Matched Lines" subheader="3-way PO·GR·MIRO verified"
+                     class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+          <TileContent>
+            <NumericContent value="{cockpit>/matchedCount}" valueColor="Good"
+                            icon="sap-icon://sys-enter-2" withMargin="false"/>
+          </TileContent>
+        </GenericTile>
+
+        <GenericTile header="Partially Matched" subheader="Pending clarification"
+                     class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+          <TileContent>
+            <NumericContent value="{cockpit>/partialCount}" valueColor="Critical"
+                            icon="sap-icon://warning2" withMargin="false"/>
+          </TileContent>
+        </GenericTile>
+
+        <GenericTile header="Unmatched Lines" subheader="Requires AP action"
+                     class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+          <TileContent>
+            <NumericContent value="{cockpit>/trueUnmatched}" valueColor="Error"
+                            icon="sap-icon://sys-cancel-2" withMargin="false"/>
+          </TileContent>
+        </GenericTile>
+
+        <GenericTile header="Open Exceptions" subheader="{cockpit>/resolvedEx} resolved"
+                     class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+          <TileContent>
+            <NumericContent value="{cockpit>/openEx}" valueColor="Critical"
+                            icon="sap-icon://alert" withMargin="false"/>
+          </TileContent>
+        </GenericTile>
+
+        <GenericTile header="Ready for Payment" subheader="Cleared for F110 run"
+                     class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+          <TileContent>
+            <NumericContent value="{cockpit>/readyForPayment}" valueColor="Good"
+                            icon="sap-icon://payment-approval" withMargin="false"/>
+          </TileContent>
+        </GenericTile>
+
+        <GenericTile header="Avg Resolution" subheader="Working days per exception"
+                     class="sapUiTinyMarginBottom" frameType="TwoByOne">
+          <TileContent>
+            <NumericContent value="{cockpit>/avgResolutionDays}" scale=" days"
+                            icon="sap-icon://date-time" withMargin="false"/>
+          </TileContent>
+        </GenericTile>
+
+      </HBox>
+
+      <!-- ═══ SECTION 2: PROCESSING SUMMARY ════════════════════════════════ -->
+      <Panel class="vrCard sapUiSmallMarginBottom" backgroundDesign="Transparent">
+        <headerToolbar>
+          <Toolbar design="Transparent">
+            <Title text="Reconciliation Processing Summary" level="H5" class="vrCardTitle"/>
+            <ToolbarSpacer/>
+            <ObjectStatus text="Period: April 2026" state="Information" icon="sap-icon://date-time"/>
+          </Toolbar>
+        </headerToolbar>
+        <VBox class="sapUiSmallMarginBeginEnd sapUiTinyMarginBottom">
+
+          <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom sapUiTinyMarginTop">
+            <HBox alignItems="Center">
+              <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendGreen'&gt;&lt;/span&gt;"/>
+              <Label text="Matched" design="Bold" class="vrLabelGreen"/>
+            </HBox>
+            <Text text="{cockpit>/matchedCount} of {cockpit>/totalLines} lines · {cockpit>/matchRate}%" class="vrMuted"/>
+          </HBox>
+          <ProgressIndicator percentValue="{cockpit>/matchRate}" displayValue="{cockpit>/matchRate}%"
+                             state="Success" class="sapUiTinyMarginBottom"/>
+
+          <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+            <HBox alignItems="Center">
+              <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendRed'&gt;&lt;/span&gt;"/>
+              <Label text="Unmatched / Exceptions" design="Bold" class="vrLabelRed"/>
+            </HBox>
+            <Text text="{cockpit>/unmatchedCount} lines · {cockpit>/unmatchedPct}%" class="vrMuted"/>
+          </HBox>
+          <ProgressIndicator percentValue="{cockpit>/unmatchedPct}" displayValue="{cockpit>/unmatchedPct}%"
+                             state="Error" class="sapUiTinyMarginBottom"/>
+
+          <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+            <HBox alignItems="Center">
+              <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendOrange'&gt;&lt;/span&gt;"/>
+              <Label text="Exception Resolution Progress" design="Bold" class="vrLabelOrange"/>
+            </HBox>
+            <Text text="{cockpit>/resolvedEx} resolved · {cockpit>/openEx} open" class="vrMuted"/>
+          </HBox>
+          <ProgressIndicator percentValue="{cockpit>/resolvePercentage}"
+                             displayValue="{cockpit>/resolvePercentage}% resolved"
+                             state="Warning" class="sapUiTinyMarginBottom"/>
+        </VBox>
+      </Panel>
+
+      <!-- ═══ SECTION 3: CHARTS ROW ═════════════════════════════════════════ -->
+      <l:Grid defaultSpan="XL4 L4 M6 S12" class="sapUiSmallMarginBottom">
+
+        <!-- Chart 1: Match Status Donut -->
+        <Panel class="vrCard" backgroundDesign="Transparent">
+          <headerToolbar>
+            <Toolbar design="Transparent">
+              <Title text="Match Status Distribution" level="H5" class="vrCardTitle"/>
+            </Toolbar>
+          </headerToolbar>
+          <VBox class="sapUiSmallMarginBeginEnd" alignItems="Center">
+            <core:HTML content="{cockpit>/donutSvg}" preferDOM="false"/>
+            <HBox justifyContent="Center" wrap="Wrap" class="sapUiTinyMarginTop sapUiTinyMarginBottom">
+              <HBox alignItems="Center" class="sapUiTinyMarginEnd">
+                <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendGreen'&gt;&lt;/span&gt;"/>
+                <Text text="Matched" class="vrSmall"/>
+              </HBox>
+              <HBox alignItems="Center" class="sapUiTinyMarginEnd">
+                <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendOrange'&gt;&lt;/span&gt;"/>
+                <Text text="Partial" class="vrSmall"/>
+              </HBox>
+              <HBox alignItems="Center">
+                <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendRed'&gt;&lt;/span&gt;"/>
+                <Text text="Unmatched" class="vrSmall"/>
+              </HBox>
+            </HBox>
+          </VBox>
+        </Panel>
+
+        <!-- Chart 2: Exception Reason Breakdown -->
+        <Panel class="vrCard" backgroundDesign="Transparent">
+          <headerToolbar>
+            <Toolbar design="Transparent">
+              <Title text="Exception Reason Breakdown" level="H5" class="vrCardTitle"/>
+            </Toolbar>
+          </headerToolbar>
+          <List items="{cockpit>/reasonList}" showSeparators="None"
+                class="sapUiSmallMarginBeginEnd">
+            <CustomListItem>
+              <VBox class="sapUiTinyMarginBottom">
+                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                  <Text text="{cockpit>reason}" class="vrSmall vrBold"/>
+                  <ObjectStatus text="{cockpit>count} lines" state="{cockpit>state}"/>
+                </HBox>
+                <ProgressIndicator percentValue="{cockpit>percentage}"
+                                   displayValue="{cockpit>percentage}%"
+                                   state="{cockpit>state}"/>
+              </VBox>
+            </CustomListItem>
+          </List>
+        </Panel>
+
+        <!-- Chart 3: Exception Aging Profile -->
+        <Panel class="vrCard" backgroundDesign="Transparent">
+          <headerToolbar>
+            <Toolbar design="Transparent">
+              <Title text="Exception Aging Profile" level="H5" class="vrCardTitle"/>
+            </Toolbar>
+          </headerToolbar>
+          <VBox class="sapUiSmallMarginBeginEnd">
+            <Text text="Aging Distribution" class="vrMuted sapUiTinyMarginBottom"/>
+            <core:HTML content="{cockpit>/agingBarSvg}" preferDOM="false"/>
+            <HBox class="sapUiTinyMarginTop sapUiTinyMarginBottom">
+              <HBox alignItems="Center" class="sapUiTinyMarginEnd">
+                <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendGreen'&gt;&lt;/span&gt;"/>
+                <Text text="0–15d" class="vrSmall"/>
+              </HBox>
+              <HBox alignItems="Center" class="sapUiTinyMarginEnd">
+                <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendOrange'&gt;&lt;/span&gt;"/>
+                <Text text="16–30d" class="vrSmall"/>
+              </HBox>
+              <HBox alignItems="Center">
+                <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendRed'&gt;&lt;/span&gt;"/>
+                <Text text="31+d" class="vrSmall"/>
+              </HBox>
+            </HBox>
+            <VBox class="sapUiTinyMarginBottom">
+              <HBox justifyContent="SpaceBetween">
+                <ObjectStatus text="0–15 Days" state="Success" icon="sap-icon://status-completed"/>
+                <Text text="{cockpit>/aging0_15} exceptions ({cockpit>/aging0_15Pct}%)" class="vrSmall"/>
+              </HBox>
+              <ProgressIndicator percentValue="{cockpit>/aging0_15Pct}"
+                                 displayValue="{cockpit>/aging0_15Pct}%" state="Success"/>
+            </VBox>
+            <VBox class="sapUiTinyMarginBottom">
+              <HBox justifyContent="SpaceBetween">
+                <ObjectStatus text="16–30 Days" state="Warning" icon="sap-icon://status-in-process"/>
+                <Text text="{cockpit>/aging16_30} exceptions ({cockpit>/aging16_30Pct}%)" class="vrSmall"/>
+              </HBox>
+              <ProgressIndicator percentValue="{cockpit>/aging16_30Pct}"
+                                 displayValue="{cockpit>/aging16_30Pct}%" state="Warning"/>
+            </VBox>
+            <VBox class="sapUiTinyMarginBottom">
+              <HBox justifyContent="SpaceBetween">
+                <ObjectStatus text="31+ Days" state="Error" icon="sap-icon://status-critical"/>
+                <Text text="{cockpit>/aging31plus} exceptions ({cockpit>/aging31Pct}%)" class="vrSmall"/>
+              </HBox>
+              <ProgressIndicator percentValue="{cockpit>/aging31Pct}"
+                                 displayValue="{cockpit>/aging31Pct}%" state="Error"/>
+            </VBox>
+          </VBox>
+        </Panel>
+
+      </l:Grid>
+
+      <!-- ═══ SECTION 4: TOP VENDORS TABLE ═════════════════════════════════ -->
+      <Panel class="vrCard sapUiSmallMarginBottom" backgroundDesign="Transparent">
+        <headerToolbar>
+          <Toolbar design="Transparent">
+            <Title text="Top Vendors — Risk &amp; Match Rate Overview" level="H5" class="vrCardTitle"/>
+            <ToolbarSpacer/>
+            <ObjectStatus text="Ordered by exception count" icon="sap-icon://sort-descending"/>
+          </Toolbar>
+        </headerToolbar>
+        <Table items="{cockpit>/topVendors}" fixedLayout="false"
+               noDataText="No vendor data available">
+          <columns>
+            <Column><Text text="Vendor Name"/></Column>
+            <Column hAlign="Center" minScreenWidth="Tablet"><Text text="Code"/></Column>
+            <Column hAlign="Center" minScreenWidth="Tablet"><Text text="Invoices"/></Column>
+            <Column hAlign="Center"><Text text="Exceptions"/></Column>
+            <Column hAlign="Center"><Text text="Risk"/></Column>
+            <Column><Text text="Match Rate"/></Column>
+          </columns>
+          <items>
+            <ColumnListItem>
+              <cells>
+                <Text text="{cockpit>name}" class="vrBold"/>
+                <Text text="{cockpit>code}" class="vrCode"/>
+                <Text text="{cockpit>invoices}"/>
+                <ObjectStatus text="{cockpit>exceptions}" state="{cockpit>exState}" icon="sap-icon://alert"/>
+                <ObjectStatus text="{cockpit>risk}" state="{cockpit>riskState}"/>
+                <VBox>
+                  <Text text="{cockpit>matchRate}%" class="vrSmall vrBold"/>
+                  <ProgressIndicator percentValue="{cockpit>matchRate}" displayValue=""
+                                     state="{cockpit>matchRateState}"/>
+                </VBox>
+              </cells>
+            </ColumnListItem>
+          </items>
+        </Table>
+      </Panel>
+
+      <!-- ═══ SECTION 5: WORKLIST TABS ═════════════════════════════════════ -->
+      <Panel class="vrCard sapUiSmallMarginBottom" backgroundDesign="Transparent">
+        <headerToolbar>
+          <Toolbar design="Transparent">
+            <Title text="Worklists &amp; Activity Monitor" level="H5" class="vrCardTitle"/>
+          </Toolbar>
+        </headerToolbar>
+
+        <IconTabBar>
+          <items>
+
+            <!-- Tab 1: Pending Exceptions -->
+            <IconTabFilter text="Pending Exceptions" icon="sap-icon://alert" iconColor="Negative">
+              <content>
+                <Table items="{cockpit>/pendingExceptions}" fixedLayout="false"
+                       noDataText="No pending exceptions — all clear!">
+                  <columns>
+                    <Column><Text text="ID"/></Column>
+                    <Column><Text text="Vendor"/></Column>
+                    <Column><Text text="Reason"/></Column>
+                    <Column hAlign="Right"><Text text="Amount"/></Column>
+                    <Column hAlign="Center"><Text text="Days Open"/></Column>
+                    <Column hAlign="Center"><Text text="Priority"/></Column>
+                    <Column hAlign="Center"><Text text="Action"/></Column>
+                  </columns>
+                  <items>
+                    <ColumnListItem>
+                      <cells>
+                        <Text text="{cockpit>id}" class="vrCode"/>
+                        <Text text="{cockpit>vendor}"/>
+                        <Text text="{cockpit>reason}" class="vrSmall"/>
+                        <Text text="{cockpit>amount}" class="vrBold"/>
+                        <ObjectStatus text="{cockpit>days}d" state="{cockpit>daysState}" icon="sap-icon://date-time"/>
+                        <ObjectStatus text="{cockpit>priority}" state="{cockpit>priorityState}"/>
+                        <Button text="Resolve" icon="sap-icon://accept" type="Accept"/>
+                      </cells>
+                    </ColumnListItem>
+                  </items>
+                </Table>
+              </content>
+            </IconTabFilter>
+
+            <!-- Tab 2: Matching Jobs -->
+            <IconTabFilter text="Matching Jobs" icon="sap-icon://it-instance" iconColor="Default">
+              <content>
+                <Table items="{cockpit>/recentJobs}" fixedLayout="false"
+                       noDataText="No matching jobs found">
+                  <columns>
+                    <Column><Text text="Run Time"/></Column>
+                    <Column><Text text="Vendor"/></Column>
+                    <Column hAlign="Center"><Text text="Status"/></Column>
+                    <Column hAlign="Center"><Text text="Matched"/></Column>
+                    <Column hAlign="Center"><Text text="Total"/></Column>
+                    <Column><Text text="Match Rate"/></Column>
+                  </columns>
+                  <items>
+                    <ColumnListItem>
+                      <cells>
+                        <Text text="{cockpit>time}" class="vrMuted"/>
+                        <Text text="{cockpit>vendor}" class="vrBold"/>
+                        <ObjectStatus text="{cockpit>status}" state="Success" icon="sap-icon://sys-enter-2"/>
+                        <Text text="{cockpit>matched}"/>
+                        <Text text="{cockpit>total}"/>
+                        <VBox>
+                          <Text text="{cockpit>pct}%" class="vrSmall vrBold"/>
+                          <ProgressIndicator percentValue="{cockpit>pct}" displayValue=""
+                                             state="{cockpit>matchState}"/>
+                        </VBox>
+                      </cells>
+                    </ColumnListItem>
+                  </items>
+                </Table>
+              </content>
+            </IconTabFilter>
+
+            <!-- Tab 3: Approval Queue -->
+            <IconTabFilter text="Approval Queue" icon="sap-icon://write-new-document" iconColor="Positive">
+              <content>
+                <Table items="{cockpit>/approvalQueue}" fixedLayout="false"
+                       noDataText="No approvals pending">
+                  <columns>
+                    <Column><Text text="Request ID"/></Column>
+                    <Column><Text text="Vendor"/></Column>
+                    <Column><Text text="Type"/></Column>
+                    <Column hAlign="Right"><Text text="Amount"/></Column>
+                    <Column><Text text="Requested By"/></Column>
+                    <Column><Text text="Due Date"/></Column>
+                    <Column hAlign="Center"><Text text="Urgency"/></Column>
+                    <Column hAlign="Center"><Text text="Actions"/></Column>
+                  </columns>
+                  <items>
+                    <ColumnListItem>
+                      <cells>
+                        <Text text="{cockpit>id}" class="vrCode"/>
+                        <Text text="{cockpit>vendor}"/>
+                        <Text text="{cockpit>type}" class="vrSmall"/>
+                        <Text text="{cockpit>amount}" class="vrBold"/>
+                        <Text text="{cockpit>requestedBy}"/>
+                        <Text text="{cockpit>dueDate}" class="vrSmall"/>
+                        <ObjectStatus text="{cockpit>urgency}" state="{cockpit>urgencyState}"/>
+                        <HBox>
+                          <Button text="Approve" type="Accept" class="sapUiTinyMarginEnd"/>
+                          <Button text="Reject"  type="Reject"/>
+                        </HBox>
+                      </cells>
+                    </ColumnListItem>
+                  </items>
+                </Table>
+              </content>
+            </IconTabFilter>
+
+            <!-- Tab 4: High-Risk Vendors -->
+            <IconTabFilter text="High-Risk Vendors" icon="sap-icon://warning" iconColor="Critical">
+              <content>
+                <Table items="{cockpit>/highRiskVendors}" fixedLayout="false"
+                       noDataText="No high-risk vendors identified">
+                  <columns>
+                    <Column><Text text="Vendor Name"/></Column>
+                    <Column hAlign="Center"><Text text="Code"/></Column>
+                    <Column hAlign="Center"><Text text="Open Exceptions"/></Column>
+                    <Column hAlign="Center"><Text text="Risk Level"/></Column>
+                    <Column><Text text="Match Rate"/></Column>
+                    <Column hAlign="Center"><Text text="Action"/></Column>
+                  </columns>
+                  <items>
+                    <ColumnListItem type="Active">
+                      <cells>
+                        <Text text="{cockpit>name}" class="vrBold"/>
+                        <Text text="{cockpit>code}" class="vrCode"/>
+                        <ObjectStatus text="{cockpit>exceptions}" state="{cockpit>exState}" icon="sap-icon://alert"/>
+                        <ObjectStatus text="{cockpit>risk}" state="{cockpit>riskState}"/>
+                        <VBox>
+                          <Text text="{cockpit>matchRate}%" class="vrSmall vrBold"/>
+                          <ProgressIndicator percentValue="{cockpit>matchRate}" displayValue=""
+                                             state="{cockpit>matchRateState}"/>
+                        </VBox>
+                        <Button text="Review" icon="sap-icon://inspect" type="Emphasized"/>
+                      </cells>
+                    </ColumnListItem>
+                  </items>
+                </Table>
+              </content>
+            </IconTabFilter>
+
+          </items>
+        </IconTabBar>
+      </Panel>
+
+      <!-- ═══ SECTION 6: P2P WORKFLOW ═══════════════════════════════════════ -->
+      <Panel class="vrCard sapUiSmallMarginBottom" backgroundDesign="Transparent">
+        <headerToolbar>
+          <Toolbar design="Transparent">
+            <Title text="Procure-to-Pay (P2P) — Reconciliation Control Flow" level="H5" class="vrCardTitle"/>
+            <ToolbarSpacer/>
+            <ObjectStatus text="ME23N · MIGO · MIRO · FBL1N · F110" state="Information" icon="sap-icon://SAP-logo-shape"/>
+          </Toolbar>
+        </headerToolbar>
+        <HBox justifyContent="SpaceAround" class="sapUiMediumMarginTopBottom" wrap="Wrap">
+
+          <VBox alignItems="Center" class="sapUiTinyMarginEnd">
+            <Button icon="sap-icon://cart" type="Accept"/>
+            <Label text="1. Purchase Order" design="Bold" class="sapUiTinyMarginTop"/>
+            <Text text="EKKO/EKPO" class="vrMuted"/>
+            <ObjectStatus text="Validated" state="Success" icon="sap-icon://sys-enter-2"/>
+          </VBox>
+          <core:HTML preferDOM="false" content="&lt;div class='vrP2PConnector'&gt;&lt;div class='vrP2PLine'&gt;&lt;/div&gt;&lt;/div&gt;"/>
+          <VBox alignItems="Center" class="sapUiTinyMarginEnd">
+            <Button icon="sap-icon://shipping-status" type="Accept"/>
+            <Label text="2. Goods Receipt" design="Bold" class="sapUiTinyMarginTop"/>
+            <Text text="MIGO (GR/IR)" class="vrMuted"/>
+            <ObjectStatus text="Posted" state="Success" icon="sap-icon://sys-enter-2"/>
+          </VBox>
+          <core:HTML preferDOM="false" content="&lt;div class='vrP2PConnector'&gt;&lt;div class='vrP2PLine'&gt;&lt;/div&gt;&lt;/div&gt;"/>
+          <VBox alignItems="Center" class="sapUiTinyMarginEnd">
+            <Button icon="sap-icon://form" type="Accept"/>
+            <Label text="3. Invoice Verify" design="Bold" class="sapUiTinyMarginTop"/>
+            <Text text="MIRO (3-way)" class="vrMuted"/>
+            <ObjectStatus text="Complete" state="Success" icon="sap-icon://sys-enter-2"/>
+          </VBox>
+          <core:HTML preferDOM="false" content="&lt;div class='vrP2PConnector'&gt;&lt;div class='vrP2PLine vrP2PLineWarning'&gt;&lt;/div&gt;&lt;/div&gt;"/>
+          <VBox alignItems="Center" class="sapUiTinyMarginEnd">
+            <Button icon="sap-icon://compare" type="Emphasized"/>
+            <Label text="4. SoA Match" design="Bold" class="sapUiTinyMarginTop"/>
+            <Text text="FBL1N vs SoA" class="vrMuted"/>
+            <ObjectStatus text="{cockpit>/openEx} open" state="Warning" icon="sap-icon://alert"/>
+          </VBox>
+          <core:HTML preferDOM="false" content="&lt;div class='vrP2PConnector'&gt;&lt;div class='vrP2PLine vrP2PLinePending'&gt;&lt;/div&gt;&lt;/div&gt;"/>
+          <VBox alignItems="Center">
+            <Button icon="sap-icon://money-bills" type="Ghost"/>
+            <Label text="5. Payment Run" design="Bold" class="sapUiTinyMarginTop"/>
+            <Text text="F110 (Bank)" class="vrMuted"/>
+            <ObjectStatus text="Pending" state="None" icon="sap-icon://pending"/>
+          </VBox>
+
+        </HBox>
+      </Panel>
+
+      <!-- ═══ SECTION 7: QUICK ACTIONS ═════════════════════════════════════ -->
+      <Panel class="vrQuickActions" backgroundDesign="Transparent">
+        <headerToolbar>
+          <Toolbar design="Transparent">
+            <Title text="Quick Actions" level="H5" class="vrCardTitle"/>
+          </Toolbar>
+        </headerToolbar>
+        <HBox class="sapUiSmallMarginBeginEnd sapUiTinyMarginBottom" wrap="Wrap">
+          <Button text="Upload Vendor Statement" icon="sap-icon://attachment-text-file"
+                  type="Emphasized" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+          <Button text="Upload SAP Ledger" icon="sap-icon://upload"
+                  type="Emphasized" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+          <Button text="Run Matching Engine" icon="sap-icon://play"
+                  type="Accept" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+          <Button text="Export Report (XLSX)" icon="sap-icon://excel-attachment"
+                  type="Ghost" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+          <Button text="View Audit Log" icon="sap-icon://record"
+                  type="Ghost" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+          <Button text="Schedule Auto-Run" icon="sap-icon://appointment-2"
+                  type="Ghost" class="sapUiTinyMarginBottom"/>
+        </HBox>
+      </Panel>
+
+    </VBox>
   </VBox>
 </mvc:View>

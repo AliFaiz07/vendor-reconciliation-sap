@@ -1,0 +1,114 @@
+/* ═══════════════════════════════════════════════════════════════
+   Vendor Reconciliation Cockpit — Custom CSS
+   All inline style overrides are managed here as classes.
+   Applied via class="" attributes on SAPUI5 controls.
+════════════════════════════════════════════════════════════════ */
+
+/* ── Dark Header Bar ───────────────────────────────────────── */
+.vrCockpitHeader {
+  background: #1D2D3E !important;
+  padding: 10px 20px;
+  border-bottom: 3px solid #0070F2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.vrCockpitHeaderInner {
+  display: flex;
+  flex-direction: column;
+}
+.vrCockpitHeaderTitle {
+  color: #ffffff !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  font-family: "72", Arial, sans-serif;
+  margin: 0;
+}
+.vrCockpitHeaderSubtitle {
+  color: #90A4AE !important;
+  font-size: 11px !important;
+  margin: 2px 0 0 0;
+}
+.vrCockpitHeaderActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #B0BEC5;
+  font-size: 11px;
+}
+
+/* ── Alert Strip (no radius, full width) ──────────────────── */
+.vrAlertStrip {
+  border-radius: 0 !important;
+  margin: 0 !important;
+}
+
+/* ── Section label ────────────────────────────────────────── */
+.vrSectionLabel {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 11px !important;
+  color: #6A6D70 !important;
+  font-weight: 700 !important;
+  margin-bottom: 10px;
+}
+
+/* ── Card Panels ──────────────────────────────────────────── */
+.vrCard {
+  background: #FAFAFA !important;
+  border: 1px solid #E5E5E5 !important;
+  border-radius: 6px !important;
+}
+.vrCard .sapMPanelHdr,
+.vrCard .sapMPanelHdrText {
+  border-radius: 6px 6px 0 0;
+}
+.vrCard .sapMPanelContent {
+  border-radius: 0 0 6px 6px;
+}
+.vrCardTitle {
+  font-size: 13px !important;
+  color: #1D2D3E !important;
+  font-weight: 600 !important;
+}
+
+/* ── Quick Actions Panel ──────────────────────────────────── */
+.vrQuickActions {
+  background: #F0F4FF !important;
+  border: 1px solid #CFD8FF !important;
+  border-radius: 6px !important;
+}
+
+/* ── Text helpers ─────────────────────────────────────────── */
+.vrBold { font-weight: 700 !important; }
+.vrMuted { color: #6A6D70 !important; font-size: 12px !important; }
+.vrSmall { font-size: 12px !important; }
+.vrCode  { font-family: "72Mono", "Courier New", monospace !important; color: #0070F2 !important; font-size: 12px !important; }
+.vrGreen { color: #1B8E3A !important; font-weight: 600 !important; }
+.vrRed   { color: #AA0808 !important; font-weight: 600 !important; }
+.vrOrange{ color: #E06C00 !important; font-weight: 600 !important; }
+
+/* ── Processing Summary label rows ───────────────────────── */
+.vrLabelGreen { color: #1B8E3A !important; font-weight: 600 !important; font-size: 13px !important; }
+.vrLabelRed   { color: #AA0808 !important; font-weight: 600 !important; font-size: 13px !important; }
+.vrLabelOrange{ color: #E06C00 !important; font-weight: 600 !important; font-size: 13px !important; }
+
+/* ── P2P Connectors ───────────────────────────────────────── */
+.vrP2PConnector        { display: flex; align-items: center; padding-top: 6px; }
+.vrP2PLine             { height: 3px; width: 36px; background: #1B8E3A; }
+.vrP2PLineWarning      { background: #E06C00; }
+.vrP2PLinePending      { background: #9E9E9E; border-top: 2px dashed #9E9E9E; background: transparent; }
+.vrP2PStep             { display: flex; flex-direction: column; align-items: center; min-width: 90px; }
+
+/* ── Chart Legend dots ────────────────────────────────────── */
+.vrLegendDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.vrLegendGreen  { background: #1B8E3A; }
+.vrLegendOrange { background: #E06C00; }
+.vrLegendRed    { background: #AA0808; }

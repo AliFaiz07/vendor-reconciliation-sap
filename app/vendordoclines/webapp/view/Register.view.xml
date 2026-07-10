@@ -1,0 +1,26 @@
+<mvc:View controllerName="vendordoclines.controller.Register" xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:core="sap.ui.core">
+  <Page title="Register" showHeader="false">
+    <VBox alignItems="Center" justifyContent="Center" height="100%">
+      <Panel width="420px" class="sapUiMediumMargin">
+        <VBox class="sapUiMediumMargin">
+          <Title text="Create Account" level="H2" class="sapUiSmallMarginBottom"/>
+          <Label text="Full Name"/><Input id="regFullName" class="sapUiTinyMarginBottom"/>
+          <Label text="Username"/><Input id="regUsername" class="sapUiTinyMarginBottom"/>
+          <Label text="Email"/><Input id="regEmail" class="sapUiTinyMarginBottom"/>
+          <Label text="Password"/><Input id="regPassword" type="Password" class="sapUiTinyMarginBottom"/>
+          <Label text="Confirm Password"/><Input id="regConfirmPassword" type="Password" class="sapUiTinyMarginBottom"/>
+          <Label text="Business Role"/>
+          <Select id="regBusinessRole" class="sapUiMediumMarginBottom">
+            <core:Item key="GR" text="Goods Receipt"/>
+            <core:Item key="MIRO" text="MIRO (Invoice Verification)"/>
+            <core:Item key="AP" text="Accounts Payable"/>
+            <core:Item key="BILLING" text="Billing"/>
+            <core:Item key="AR" text="Accounts Receivable"/>
+          </Select>
+          <Button text="Register" type="Emphasized" press="onRegister" width="100%"/>
+          <Button text="Back to Login" press="onGoLogin" width="100%" class="sapUiTinyMarginTop"/>
+        </VBox>
+      </Panel>
+    </VBox>
+  </Page>
+</mvc:View>

@@ -8,7 +8,9 @@ function levenshtein(a, b) {
   for (let j = 0; j <= b.length; j++) dp[0][j] = j;
   for (let i = 1; i <= a.length; i++) {
     for (let j = 1; j <= b.length; j++) {
-      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
     }
   }
   return dp[a.length][b.length];
@@ -26,12 +28,12 @@ function matchInvoiceNumber(vendorLine, ledgerItem) {
 function matchAmount(vendorLine, ledgerItem) {
   const delta = Math.abs(vendorLine.invoiceAmount - ledgerItem.amountInTransCrcy);
   if (delta <= TOLERANCE_AMOUNT) return { code: 'MATCHED', rule: 'RULE_AMOUNT', delta: 0 };
-  return { code: 'MATCHED/AMOUNT-DIFF', rule: 'RULE_AMOUNT', delta };
+  return { code: 'UNMATCHED/AMOUNT-DIFF', rule: 'RULE_AMOUNT', delta };
 }
 
 function matchCurrency(vendorLine, ledgerItem) {
   if (vendorLine.currency === ledgerItem.transactionCurrency) return { code: 'MATCHED', rule: 'RULE_CURRENCY' };
-  return { code: 'MATCHED/FX-DIFF', rule: 'RULE_CURRENCY', blocking: true };
+  return { code: 'UNMATCHED/FX-DIFF', rule: 'RULE_CURRENCY', blocking: true };
 }
 
 function matchDate(vendorLine, ledgerItem) {
@@ -44,7 +46,7 @@ function matchDate(vendorLine, ledgerItem) {
 function matchPoReference(vendorLine, grirRow) {
   if (!vendorLine.poReference) return null;
   if (vendorLine.poReference !== grirRow?.purchaseOrder) return null;
-  if (!Number(grirRow.goodsReceiptQty)) return { code: 'MATCHED/GR-PENDING', rule: 'RULE_PO_GR' };
+  if (!grirRow.goodsReceiptQty || grirRow.goodsReceiptQty === 0) return { code: 'UNMATCHED/GR-PENDING', rule: 'RULE_PO_GR' };
   return { code: 'MATCHED', rule: 'RULE_PO_GR' };
 }
 
@@ -52,7 +54,7 @@ function matchGstTds(vendorLine, ledgerTaxAmount) {
   if (vendorLine.gstTdsAmount == null) return null;
   const delta = Math.abs(vendorLine.gstTdsAmount - ledgerTaxAmount);
   if (delta === 0) return { code: 'MATCHED', rule: 'RULE_GST_TDS' };
-  return { code: 'MATCHED/GST-DIFF', rule: 'RULE_GST_TDS', delta };
+  return { code: 'UNMATCHED/GST-DIFF', rule: 'RULE_GST_TDS', delta };
 }
 
 function matchPaymentReference(vendorLine, ledgerItem) {
@@ -60,7 +62,7 @@ function matchPaymentReference(vendorLine, ledgerItem) {
   return { code: 'MATCHED', rule: 'RULE_PAYMENT_REF' };
 }
 
-async function runMatchRulesForLine(vendorLine, candidates, grirRow) {
+async function runMatchRulesForLine(vendorLine, candidates) {
   const results = [];
   for (const ledgerItem of candidates) {
     const r1 = matchInvoiceNumber(vendorLine, ledgerItem);
@@ -69,10 +71,9 @@ async function runMatchRulesForLine(vendorLine, candidates, grirRow) {
     const r3 = matchCurrency(vendorLine, ledgerItem);
     if (r3.blocking) { results.push(r3); continue; }
     const r4 = matchDate(vendorLine, ledgerItem);
-    const r5 = matchPoReference(vendorLine, grirRow);
     const r6 = matchGstTds(vendorLine, ledgerItem.taxAmount);
     const r7 = matchPaymentReference(vendorLine, ledgerItem);
-    results.push(...[r1, r2, r4, r5, r6, r7].filter(Boolean));
+    results.push(...[r1, r2, r4, r6, r7].filter(Boolean).map(r => ({ ...r, ledgerItemID: ledgerItem.ID })));
   }
   return results.length ? results : [{ code: 'UNMATCHED', rule: 'NO_CANDIDATE' }];
 }

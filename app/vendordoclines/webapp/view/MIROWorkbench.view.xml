@@ -1,0 +1,305 @@
+<mvc:View controllerName="vendordoclines.controller.MIROWorkbench"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns="sap.m"
+          xmlns:l="sap.ui.layout"
+          xmlns:core="sap.ui.core">
+
+  <Page title="Invoice Verification — MIRO Workbench" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button icon="sap-icon://log" text="Logout" type="Reject" press="onLogout"/>
+    </headerContent>
+
+    <VBox>
+      <!-- Dark Header -->
+      <core:HTML preferDOM="false"
+        content="&lt;div class='vrCockpitHeader'&gt;&lt;div class='vrCockpitHeaderInner'&gt;&lt;div class='vrCockpitHeaderTitle'&gt;Invoice Verification — MIRO Workbench&lt;/div&gt;&lt;div class='vrCockpitHeaderSubtitle'&gt;MM Invoice Verification &amp;middot; 3-Way Match Verification &amp;middot; Invoice Blocking&lt;/div&gt;&lt;/div&gt;&lt;div class='vrCockpitHeaderActions'&gt;Last refreshed: Today 09:30 AM&lt;/div&gt;&lt;/div&gt;"/>
+
+      <!-- Action buttons row -->
+      <Toolbar design="Solid">
+        <ToolbarSpacer/>
+        <Button text="Refresh" icon="sap-icon://refresh" press="loadKpis" type="Ghost"/>
+      </Toolbar>
+
+      <!-- Alert Strip -->
+      <MessageStrip class="vrAlertStrip"
+        text="Attention: 5 invoices are pending verification. 2 blocked invoices require price/quantity clearance."
+        type="Warning" showIcon="true" showCloseButton="false"/>
+
+      <VBox class="sapUiMediumMargin">
+        <!-- KPI Cards -->
+        <core:HTML preferDOM="false" content="&lt;div class='vrSectionLabel'&gt;Key Performance Indicators&lt;/div&gt;"/>
+        
+        <HBox wrap="Wrap" class="sapUiTinyMarginBottom">
+          <GenericTile header="Pending Verification" subheader="MIRO work queues" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{miro>/pendingVerification}" valueColor="Critical" icon="sap-icon://form" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="3-Way Match Rate" subheader="Verify compliance" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{miro>/matchRate3Way}" scale="%" valueColor="Good" icon="sap-icon://trend-up" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Blocked Invoices" subheader="Hold status items" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{miro>/blockedInvoices}" valueColor="Error" icon="sap-icon://locked" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Parked Invoices" subheader="Pending confirmation" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{miro>/parkedInvoices}" valueColor="Warning" icon="sap-icon://pause" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Posted Today" subheader="Clearing volume" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{miro>/postedToday}" valueColor="Good" icon="sap-icon://sys-enter-2" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Variance > Limit" subheader="Out of tolerance" class="sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{miro>/varianceExceeds}" valueColor="Critical" icon="sap-icon://alert" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+        </HBox>
+
+        <!-- Progress Panel -->
+        <Panel class="vrCard sapUiSmallMarginBottom" backgroundDesign="Transparent">
+          <headerToolbar>
+            <Toolbar design="Transparent">
+              <Title text="3-Way Verification Performance" level="H5" class="vrCardTitle"/>
+            </Toolbar>
+          </headerToolbar>
+          <VBox class="sapUiSmallMarginBeginEnd sapUiTinyMarginBottom">
+            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom sapUiTinyMarginTop">
+              <Label text="3-Way Auto Match Rate" design="Bold" class="vrLabelGreen"/>
+              <Text text="{miro>/matchRatePct}%" class="vrMuted"/>
+            </HBox>
+            <ProgressIndicator percentValue="{miro>/matchRatePct}" displayValue="{miro>/matchRatePct}%" state="Success" class="sapUiTinyMarginBottom"/>
+
+            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+              <Label text="On-Time Invoice Verification Rate" design="Bold" class="vrLabelOrange"/>
+              <Text text="{miro>/onTimeVerifyPct}%" class="vrMuted"/>
+            </HBox>
+            <ProgressIndicator percentValue="{miro>/onTimeVerifyPct}" displayValue="{miro>/onTimeVerifyPct}%" state="Warning" class="sapUiTinyMarginBottom"/>
+
+            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+              <Label text="Variance Within Acceptable Limits" design="Bold" class="vrLabelGreen"/>
+              <Text text="{miro>/varianceOkPct}%" class="vrMuted"/>
+            </HBox>
+            <ProgressIndicator percentValue="{miro>/varianceOkPct}" displayValue="{miro>/varianceOkPct}%" state="Success" class="sapUiTinyMarginBottom"/>
+          </VBox>
+        </Panel>
+
+        <!-- Grid Row: Donut + Reason Bar + Daily Volume -->
+        <l:Grid defaultSpan="XL4 L4 M6 S12" class="sapUiSmallMarginBottom">
+          <!-- 3-Way Match Status Donut -->
+          <Panel class="vrCard" backgroundDesign="Transparent">
+            <headerToolbar>
+              <Toolbar design="Transparent">
+                <Title text="3-Way Match Distribution" level="H5" class="vrCardTitle"/>
+              </Toolbar>
+            </headerToolbar>
+            <VBox class="sapUiSmallMarginBeginEnd" alignItems="Center">
+              <core:HTML content="&lt;svg viewBox='0 0 200 200' width='160' height='160' xmlns='http://www.w3.org/2000/svg'&gt;&lt;circle cx='100' cy='100' r='60' fill='none' stroke='#E8E8E8' stroke-width='24'/&gt;&lt;circle cx='100' cy='100' r='60' fill='none' stroke='#1B8E3A' stroke-width='24' stroke-dasharray='309 377' transform='rotate(-90 100 100)'/&gt;&lt;circle cx='100' cy='100' r='60' fill='none' stroke='#E06C00' stroke-width='24' stroke-dasharray='45 377' transform='rotate(205 100 100)'/&gt;&lt;circle cx='100' cy='100' r='60' fill='none' stroke='#AA0808' stroke-width='24' stroke-dasharray='23 377' transform='rotate(248 100 100)'/&gt;&lt;text x='100' y='110' text-anchor='middle' font-size='24' font-weight='bold' fill='#1D2D3E'&gt;82%&lt;/text&gt;&lt;/svg&gt;" preferDOM="false"/>
+              <HBox justifyContent="Center" wrap="Wrap" class="sapUiTinyMarginTop sapUiTinyMarginBottom">
+                <HBox alignItems="Center" class="sapUiTinyMarginEnd">
+                  <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendGreen'&gt;&lt;/span&gt;"/>
+                  <Text text="Matched" class="vrSmall"/>
+                </HBox>
+                <HBox alignItems="Center" class="sapUiTinyMarginEnd">
+                  <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendOrange'&gt;&lt;/span&gt;"/>
+                  <Text text="Partial" class="vrSmall"/>
+                </HBox>
+                <HBox alignItems="Center">
+                  <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendRed'&gt;&lt;/span&gt;"/>
+                  <Text text="Blocked" class="vrSmall"/>
+                </HBox>
+              </HBox>
+            </VBox>
+          </Panel>
+
+          <!-- Blocked Invoice Reasons -->
+          <Panel class="vrCard" backgroundDesign="Transparent">
+            <headerToolbar>
+              <Toolbar design="Transparent">
+                <Title text="Blocked Invoice Reasons" level="H5" class="vrCardTitle"/>
+              </Toolbar>
+            </headerToolbar>
+            <List items="{miro>/blockedReasons}" showSeparators="None" class="sapUiSmallMarginBeginEnd">
+              <CustomListItem>
+                <VBox class="sapUiTinyMarginBottom">
+                  <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                    <Text text="{miro>reason}" class="vrSmall vrBold"/>
+                    <ObjectStatus text="{miro>count} invoices" state="{miro>state}"/>
+                  </HBox>
+                  <ProgressIndicator percentValue="{miro>pct}" displayValue="{miro>pct}%" state="{miro>state}"/>
+                </VBox>
+              </CustomListItem>
+            </List>
+          </Panel>
+
+          <!-- Daily Verification Volume -->
+          <Panel class="vrCard" backgroundDesign="Transparent">
+            <headerToolbar>
+              <Toolbar design="Transparent">
+                <Title text="Daily Post Volume" level="H5" class="vrCardTitle"/>
+              </Toolbar>
+            </headerToolbar>
+            <VBox class="sapUiSmallMarginBeginEnd" alignItems="Center">
+              <!-- Mon-Fri bar chart -->
+              <core:HTML content="&lt;svg viewBox='0 0 200 120' width='160' height='120' xmlns='http://www.w3.org/2000/svg'&gt;&lt;line x1='10' y1='100' x2='190' y2='100' stroke='#E5E5E5' stroke-width='2'/&gt;&lt;rect x='20' y='40' width='16' height='60' fill='#0070F2' rx='1'/&gt;&lt;rect x='55' y='25' width='16' height='75' fill='#0070F2' rx='1'/&gt;&lt;rect x='90' y='15' width='16' height='85' fill='#0070F2' rx='1'/&gt;&lt;rect x='125' y='50' width='16' height='50' fill='#0070F2' rx='1'/&gt;&lt;rect x='160' y='30' width='16' height='70' fill='#0070F2' rx='1'/&gt;&lt;text x='28' y='35' text-anchor='middle' font-size='8' fill='#6A6D70'&gt;6&lt;/text&gt;&lt;text x='63' y='20' text-anchor='middle' font-size='8' fill='#6A6D70'&gt;8&lt;/text&gt;&lt;text x='98' y='10' text-anchor='middle' font-size='8' fill='#6A6D70'&gt;9&lt;/text&gt;&lt;text x='133' y='45' text-anchor='middle' font-size='8' fill='#6A6D70'&gt;5&lt;/text&gt;&lt;text x='168' y='25' text-anchor='middle' font-size='8' fill='#6A6D70'&gt;7&lt;/text&gt;&lt;/svg&gt;" preferDOM="false"/>
+              <HBox class="sapUiTinyMarginTop">
+                <Text text="Mon-Fri MIRO Postings" class="vrSmall vrMuted"/>
+              </HBox>
+            </VBox>
+          </Panel>
+        </l:Grid>
+
+        <!-- Worklists IconTabBar -->
+        <Panel class="vrCard sapUiSmallMarginBottom" backgroundDesign="Transparent">
+          <headerToolbar>
+            <Toolbar design="Transparent">
+              <Title text="MIRO Verification Queues" level="H5" class="vrCardTitle"/>
+            </Toolbar>
+          </headerToolbar>
+
+          <IconTabBar>
+            <items>
+              <IconTabFilter text="Pending Verification" icon="sap-icon://alert" iconColor="Critical">
+                <content>
+                  <Table items="{miro>/pendingList}" fixedLayout="false">
+                    <columns>
+                      <Column><Text text="Invoice No"/></Column>
+                      <Column><Text text="Vendor"/></Column>
+                      <Column><Text text="PO Number"/></Column>
+                      <Column hAlign="Center"><Text text="GR Status"/></Column>
+                      <Column hAlign="Right"><Text text="Invoice Amt"/></Column>
+                      <Column hAlign="Right"><Text text="Variance"/></Column>
+                      <Column hAlign="Center"><Text text="Verify Action"/></Column>
+                    </columns>
+                    <items>
+                      <ColumnListItem>
+                        <cells>
+                          <Text text="{miro>invoiceNo}" class="vrCode"/>
+                          <Text text="{miro>vendor}"/>
+                          <Text text="{miro>poNo}" class="vrCode"/>
+                          <ObjectStatus text="{miro>grStatus}" state="{miro>grState}"/>
+                          <Text text="{miro>amount}" class="vrBold"/>
+                          <Text text="{miro>variance}" class="vrRed"/>
+                          <Button text="Verify" icon="sap-icon://accept" type="Accept" press="onVerifyInvoice"/>
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                  </Table>
+                </content>
+              </IconTabFilter>
+
+              <IconTabFilter text="Parked Invoices" icon="sap-icon://pause" iconColor="Warning">
+                <content>
+                  <Table items="{miro>/parkedList}" fixedLayout="false">
+                    <columns>
+                      <Column><Text text="Invoice No"/></Column>
+                      <Column><Text text="Vendor"/></Column>
+                      <Column><Text text="Parked By"/></Column>
+                      <Column><Text text="Reason"/></Column>
+                      <Column hAlign="Center"><Text text="Days Parked"/></Column>
+                      <Column hAlign="Right"><Text text="Amount"/></Column>
+                    </columns>
+                    <items>
+                      <ColumnListItem>
+                        <cells>
+                          <Text text="{miro>invoiceNo}" class="vrCode"/>
+                          <Text text="{miro>vendor}"/>
+                          <Text text="{miro>parkedBy}"/>
+                          <Text text="{miro>reason}" class="vrSmall"/>
+                          <ObjectStatus text="{miro>daysParked}d" state="{miro>daysState}" icon="sap-icon://date-time"/>
+                          <Text text="{miro>amount}" class="vrBold"/>
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                  </Table>
+                </content>
+              </IconTabFilter>
+
+              <IconTabFilter text="Blocked Invoices" icon="sap-icon://locked" iconColor="Negative">
+                <content>
+                  <Table items="{miro>/blockedList}" fixedLayout="false">
+                    <columns>
+                      <Column><Text text="Invoice No"/></Column>
+                      <Column><Text text="Vendor"/></Column>
+                      <Column><Text text="Block Reason"/></Column>
+                      <Column hAlign="Right"><Text text="Amount"/></Column>
+                      <Column hAlign="Center"><Text text="Block Date"/></Column>
+                      <Column hAlign="Center"><Text text="Action"/></Column>
+                    </columns>
+                    <items>
+                      <ColumnListItem>
+                        <cells>
+                          <Text text="{miro>invoiceNo}" class="vrCode"/>
+                          <Text text="{miro>vendor}"/>
+                          <ObjectStatus text="{miro>blockReason}" state="{miro>blockState}"/>
+                          <Text text="{miro>amount}" class="vrBold"/>
+                          <Text text="{miro>blockDate}"/>
+                          <Button text="Release" icon="sap-icon://unlocked" type="Emphasized" press="onReleaseBlock"/>
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                  </Table>
+                </content>
+              </IconTabFilter>
+
+              <IconTabFilter text="Posted Today" icon="sap-icon://sys-enter-2" iconColor="Positive">
+                <content>
+                  <Table items="{miro>/postedToday}" fixedLayout="false">
+                    <columns>
+                      <Column><Text text="MIRO Doc No"/></Column>
+                      <Column><Text text="Vendor"/></Column>
+                      <Column><Text text="Invoice Reference"/></Column>
+                      <Column hAlign="Right"><Text text="Amount"/></Column>
+                      <Column hAlign="Center"><Text text="Posted At"/></Column>
+                      <Column hAlign="Center"><Text text="Cleared Status"/></Column>
+                    </columns>
+                    <items>
+                      <ColumnListItem>
+                        <cells>
+                          <Text text="{miro>miroDoc}" class="vrCode"/>
+                          <Text text="{miro>vendor}"/>
+                          <Text text="{miro>invoiceNo}" class="vrCode"/>
+                          <Text text="{miro>amount}" class="vrBold"/>
+                          <Text text="{miro>postedAt}"/>
+                          <ObjectStatus text="{miro>cleared}" state="{miro>clearedState}"/>
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                  </Table>
+                </content>
+              </IconTabFilter>
+            </items>
+          </IconTabBar>
+        </Panel>
+
+        <!-- Quick Actions -->
+        <Panel class="vrQuickActions" backgroundDesign="Transparent">
+          <headerToolbar>
+            <Toolbar design="Transparent">
+              <Title text="Quick Actions" level="H5" class="vrCardTitle"/>
+            </Toolbar>
+          </headerToolbar>
+          <HBox class="sapUiSmallMarginBeginEnd sapUiTinyMarginBottom" wrap="Wrap">
+            <Button text="Verify &amp; Post Invoice (MIRO)" icon="sap-icon://accept" type="Accept" press="onVerifyInvoice" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+            <Button text="Park Invoice" icon="sap-icon://pause" type="Emphasized" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+            <Button text="Release Payment Block" icon="sap-icon://unlocked" type="Ghost" press="onReleaseBlock" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+            <Button text="Reject / Return Invoice" icon="sap-icon://reject" type="Reject" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+            <Button text="View GR Documents" icon="sap-icon://search" type="Ghost" class="sapUiTinyMarginBottom"/>
+          </HBox>
+        </Panel>
+
+      </VBox>
+    </VBox>
+  </Page>
+</mvc:View>

@@ -1,0 +1,281 @@
+<mvc:View controllerName="vendordoclines.controller.BillingDashboard"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns="sap.m"
+          xmlns:l="sap.ui.layout"
+          xmlns:core="sap.ui.core">
+
+  <Page title="Vendor Billing Dashboard" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button icon="sap-icon://log" text="Logout" type="Reject" press="onLogout"/>
+    </headerContent>
+
+    <VBox>
+      <!-- Dark Header -->
+      <core:HTML preferDOM="false"
+        content="&lt;div class='vrCockpitHeader'&gt;&lt;div class='vrCockpitHeaderInner'&gt;&lt;div class='vrCockpitHeaderTitle'&gt;Vendor Billing Dashboard&lt;/div&gt;&lt;div class='vrCockpitHeaderSubtitle'&gt;Billing Verification &amp;middot; Invoice Status &amp;middot; Statement Submissions&lt;/div&gt;&lt;/div&gt;&lt;div class='vrCockpitHeaderActions'&gt;Last refreshed: Today 09:30 AM&lt;/div&gt;&lt;/div&gt;"/>
+
+      <!-- Action buttons row -->
+      <Toolbar design="Solid">
+        <ToolbarSpacer/>
+        <Button text="Refresh" icon="sap-icon://refresh" press="loadKpis" type="Ghost"/>
+      </Toolbar>
+
+      <!-- Alert Strip -->
+      <MessageStrip class="vrAlertStrip"
+        text="Welcome back. You have {billing>/underDispute} active invoice disputes. Average payment cycle is {billing>/avgPaymentDays} days."
+        type="Information" showIcon="true" showCloseButton="false"/>
+
+      <VBox class="sapUiMediumMargin">
+        <!-- KPI Cards -->
+        <core:HTML preferDOM="false" content="&lt;div class='vrSectionLabel'&gt;Key Performance Indicators&lt;/div&gt;"/>
+        
+        <HBox wrap="Wrap" class="sapUiTinyMarginBottom">
+          <GenericTile header="Invoices Raised" subheader="This period" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{billing>/invoicesRaised}" icon="sap-icon://invoice" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Paid Invoices" subheader="Cleared this month" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{billing>/paidThisMonth}" valueColor="Good" icon="sap-icon://money-bills" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Overdue Amount" subheader="Awaiting payment" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{billing>/overdueAmount}" valueColor="Error" icon="sap-icon://alert" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Under Dispute" subheader="Requires clarification" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{billing>/underDispute}" valueColor="Critical" icon="sap-icon://warning" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Avg Payment Cycle" subheader="Average days to clear" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{billing>/avgPaymentDays}" scale=" Days" icon="sap-icon://date-time" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+
+          <GenericTile header="Statements Submitted" subheader="Reconciliation logs" class="sapUiTinyMarginBottom" frameType="TwoByOne">
+            <TileContent>
+              <NumericContent value="{billing>/statementsSubmitted}" icon="sap-icon://upload" withMargin="false"/>
+            </TileContent>
+          </GenericTile>
+        </HBox>
+
+        <!-- Processing Panel -->
+        <Panel class="vrCard sapUiSmallMarginBottom" backgroundDesign="Transparent">
+          <headerToolbar>
+            <Toolbar design="Transparent">
+              <Title text="Invoice Status Breakdown" level="H5" class="vrCardTitle"/>
+            </Toolbar>
+          </headerToolbar>
+          <VBox class="sapUiSmallMarginBeginEnd sapUiTinyMarginBottom">
+            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom sapUiTinyMarginTop">
+              <Label text="Paid Invoices" design="Bold" class="vrLabelGreen"/>
+              <Text text="{billing>/paidPct}%" class="vrMuted"/>
+            </HBox>
+            <ProgressIndicator percentValue="{billing>/paidPct}" displayValue="{billing>/paidPct}%" state="Success" class="sapUiTinyMarginBottom"/>
+
+            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+              <Label text="Pending Clearances" design="Bold" class="vrLabelOrange"/>
+              <Text text="{billing>/pendingPct}%" class="vrMuted"/>
+            </HBox>
+            <ProgressIndicator percentValue="{billing>/pendingPct}" displayValue="{billing>/pendingPct}%" state="Warning" class="sapUiTinyMarginBottom"/>
+
+            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+              <Label text="Overdue Balances" design="Bold" class="vrLabelRed"/>
+              <Text text="{billing>/overduePct}%" class="vrMuted"/>
+            </HBox>
+            <ProgressIndicator percentValue="{billing>/overduePct}" displayValue="{billing>/overduePct}%" state="Error" class="sapUiTinyMarginBottom"/>
+          </VBox>
+        </Panel>
+
+        <!-- Grid Row: Donut + Aging + Statements -->
+        <l:Grid defaultSpan="XL4 L4 M6 S12" class="sapUiSmallMarginBottom">
+          <!-- Status Donut -->
+          <Panel class="vrCard" backgroundDesign="Transparent">
+            <headerToolbar>
+              <Toolbar design="Transparent">
+                <Title text="Status Distribution" level="H5" class="vrCardTitle"/>
+              </Toolbar>
+            </headerToolbar>
+            <VBox class="sapUiSmallMarginBeginEnd" alignItems="Center">
+              <!-- Inline simple SVG representation -->
+              <core:HTML content="&lt;svg viewBox='0 0 200 200' width='160' height='160' xmlns='http://www.w3.org/2000/svg'&gt;&lt;circle cx='100' cy='100' r='60' fill='none' stroke='#E8E8E8' stroke-width='24'/&gt;&lt;circle cx='100' cy='100' r='60' fill='none' stroke='#1B8E3A' stroke-width='24' stroke-dasharray='282.7 377' transform='rotate(-90 100 100)'/&gt;&lt;circle cx='100' cy='100' r='60' fill='none' stroke='#E06C00' stroke-width='24' stroke-dasharray='64 377' transform='rotate(180 100 100)'/&gt;&lt;circle cx='100' cy='100' r='60' fill='none' stroke='#AA0808' stroke-width='24' stroke-dasharray='30.3 377' transform='rotate(241 100 100)'/&gt;&lt;text x='100' y='110' text-anchor='middle' font-size='24' font-weight='bold' fill='#1D2D3E'&gt;75%&lt;/text&gt;&lt;/svg&gt;" preferDOM="false"/>
+              <HBox justifyContent="Center" wrap="Wrap" class="sapUiTinyMarginTop sapUiTinyMarginBottom">
+                <HBox alignItems="Center" class="sapUiTinyMarginEnd">
+                  <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendGreen'&gt;&lt;/span&gt;"/>
+                  <Text text="Paid" class="vrSmall"/>
+                </HBox>
+                <HBox alignItems="Center" class="sapUiTinyMarginEnd">
+                  <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendOrange'&gt;&lt;/span&gt;"/>
+                  <Text text="Pending" class="vrSmall"/>
+                </HBox>
+                <HBox alignItems="Center">
+                  <core:HTML preferDOM="false" content="&lt;span class='vrLegendDot vrLegendRed'&gt;&lt;/span&gt;"/>
+                  <Text text="Overdue" class="vrSmall"/>
+                </HBox>
+              </HBox>
+            </VBox>
+          </Panel>
+
+          <!-- Payment Aging -->
+          <Panel class="vrCard" backgroundDesign="Transparent">
+            <headerToolbar>
+              <Toolbar design="Transparent">
+                <Title text="Overdue Aging buckets" level="H5" class="vrCardTitle"/>
+              </Toolbar>
+            </headerToolbar>
+            <VBox class="sapUiSmallMarginBeginEnd">
+              <VBox class="sapUiTinyMarginBottom">
+                <HBox justifyContent="SpaceBetween">
+                  <ObjectStatus text="0–30 Days" state="Success" icon="sap-icon://status-completed"/>
+                  <Text text="65%" class="vrSmall"/>
+                </HBox>
+                <ProgressIndicator percentValue="65" displayValue="65%" state="Success" class="sapUiTinyMarginTop"/>
+              </VBox>
+              <VBox class="sapUiTinyMarginBottom">
+                <HBox justifyContent="SpaceBetween">
+                  <ObjectStatus text="31–60 Days" state="Warning" icon="sap-icon://status-in-process"/>
+                  <Text text="25%" class="vrSmall"/>
+                </HBox>
+                <ProgressIndicator percentValue="25" displayValue="25%" state="Warning" class="sapUiTinyMarginTop"/>
+              </VBox>
+              <VBox class="sapUiTinyMarginBottom">
+                <HBox justifyContent="SpaceBetween">
+                  <ObjectStatus text="61+ Days" state="Error" icon="sap-icon://status-critical"/>
+                  <Text text="10%" class="vrSmall"/>
+                </HBox>
+                <ProgressIndicator percentValue="10" displayValue="10%" state="Error" class="sapUiTinyMarginTop"/>
+              </VBox>
+            </VBox>
+          </Panel>
+
+          <!-- Statement Status -->
+          <Panel class="vrCard" backgroundDesign="Transparent">
+            <headerToolbar>
+              <Toolbar design="Transparent">
+                <Title text="Submitted Statements Summary" level="H5" class="vrCardTitle"/>
+              </Toolbar>
+            </headerToolbar>
+            <List items="{billing>/myStatements}" showSeparators="Inner" class="sapUiSmallMarginBeginEnd">
+              <CustomListItem>
+                <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginTopBottom">
+                  <VBox>
+                    <Text text="{billing>stmtId}" class="vrBold"/>
+                    <Text text="Uploaded: {billing>uploadDate}" class="vrMuted vrSmall"/>
+                  </VBox>
+                  <ObjectStatus text="{billing>matchStatus}" state="{billing>matchState}"/>
+                </HBox>
+              </CustomListItem>
+            </List>
+          </Panel>
+        </l:Grid>
+
+        <!-- Worklists IconTabBar -->
+        <Panel class="vrCard sapUiSmallMarginBottom" backgroundDesign="Transparent">
+          <headerToolbar>
+            <Toolbar design="Transparent">
+              <Title text="Billing Worklist &amp; Trackers" level="H5" class="vrCardTitle"/>
+            </Toolbar>
+          </headerToolbar>
+          
+          <IconTabBar>
+            <items>
+              <IconTabFilter text="My Invoices" icon="sap-icon://invoice" iconColor="Default">
+                <content>
+                  <Table items="{billing>/myInvoices}" fixedLayout="false">
+                    <columns>
+                      <Column><Text text="Invoice No"/></Column>
+                      <Column><Text text="PO Reference"/></Column>
+                      <Column hAlign="Right"><Text text="Invoice Amount"/></Column>
+                      <Column hAlign="Center"><Text text="Due Date"/></Column>
+                      <Column hAlign="Center"><Text text="Status"/></Column>
+                    </columns>
+                    <items>
+                      <ColumnListItem>
+                        <cells>
+                          <Text text="{billing>invoiceNo}" class="vrCode"/>
+                          <Text text="{billing>poRef}"/>
+                          <Text text="{billing>amount}" class="vrBold"/>
+                          <Text text="{billing>dueDate}"/>
+                          <ObjectStatus text="{billing>status}" state="{billing>statusState}"/>
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                  </Table>
+                </content>
+              </IconTabFilter>
+
+              <IconTabFilter text="Submitted Statements" icon="sap-icon://attachment-text-file" iconColor="Positive">
+                <content>
+                  <Table items="{billing>/myStatements}" fixedLayout="false">
+                    <columns>
+                      <Column><Text text="Statement ID"/></Column>
+                      <Column><Text text="Upload Date"/></Column>
+                      <Column hAlign="Center"><Text text="Total Lines"/></Column>
+                      <Column hAlign="Center"><Text text="Reconciliation Status"/></Column>
+                    </columns>
+                    <items>
+                      <ColumnListItem>
+                        <cells>
+                          <Text text="{billing>stmtId}" class="vrCode"/>
+                          <Text text="{billing>uploadDate}"/>
+                          <Text text="{billing>lines}"/>
+                          <ObjectStatus text="{billing>matchStatus}" state="{billing>matchState}"/>
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                  </Table>
+                </content>
+              </IconTabFilter>
+
+              <IconTabFilter text="Disputes / Action Required" icon="sap-icon://alert" iconColor="Negative">
+                <content>
+                  <Table items="{billing>/pendingPayments}" fixedLayout="false">
+                    <columns>
+                      <Column><Text text="Disputed Invoice"/></Column>
+                      <Column hAlign="Center"><Text text="Overdue Days"/></Column>
+                      <Column hAlign="Right"><Text text="Disputed Amount"/></Column>
+                      <Column hAlign="Center"><Text text="Urgency"/></Column>
+                    </columns>
+                    <items>
+                      <ColumnListItem>
+                        <cells>
+                          <Text text="{billing>invoiceNo}" class="vrCode"/>
+                          <Text text="{billing>overdueDays} days"/>
+                          <Text text="{billing>amount}" class="vrBold"/>
+                          <ObjectStatus text="{billing>priority}" state="{billing>priorityState}"/>
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                  </Table>
+                </content>
+              </IconTabFilter>
+            </items>
+          </IconTabBar>
+        </Panel>
+
+        <!-- Quick Actions -->
+        <Panel class="vrQuickActions" backgroundDesign="Transparent">
+          <headerToolbar>
+            <Toolbar design="Transparent">
+              <Title text="Quick Actions" level="H5" class="vrCardTitle"/>
+            </Toolbar>
+          </headerToolbar>
+          <HBox class="sapUiSmallMarginBeginEnd sapUiTinyMarginBottom" wrap="Wrap">
+            <Button text="Upload Vendor Statement" icon="sap-icon://attachment-text-file" type="Emphasized" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+            <Button text="Track Payment Status" icon="sap-icon://search" type="Ghost" class="sapUiTinyMarginEnd sapUiTinyMarginBottom"/>
+            <Button text="Download Payment Advice" icon="sap-icon://download" type="Ghost" class="sapUiTinyMarginBottom"/>
+          </HBox>
+        </Panel>
+
+      </VBox>
+    </VBox>
+  </Page>
+</mvc:View>

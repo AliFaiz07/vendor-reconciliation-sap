@@ -1,6 +1,5 @@
-sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast"], function (Controller, MessageToast) {
+sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast", "sap/m/MessageBox"], function (Controller, MessageToast, MessageBox) {
   return Controller.extend("vendordoclines.controller.Main", {
-
     _fileToBase64: function (file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -9,21 +8,19 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast"], function (Co
         reader.readAsDataURL(file);
       });
     },
-
-    onSeedData: function () {
-      const file = this.byId("seedUploader").oFileUpload.files[0];
+    onUploadSapLedger: function () {
+      const file = this.byId("sapLedgerUploader").oFileUpload.files[0];
       if (!file) return;
       this._fileToBase64(file).then(base64 => {
         const model = this.getView().getModel();
         const ctx = model.bindContext("/seedSapMockData(...)");
         ctx.setParameter("fileBase64", base64);
         ctx.execute().then(() => {
-          MessageToast.show("Seed complete: " + ctx.getBoundContext().getObject().value);
+          MessageToast.show("SAP Ledger uploaded and database seeded successfully");
           model.refresh();
         }).catch(e => MessageToast.show("Error: " + e.message));
       });
     },
-
     onUploadStatement: function () {
       const file = this.byId("statementUploader").oFileUpload.files[0];
       if (!file) return;
@@ -32,12 +29,40 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast"], function (Co
         const ctx = model.bindContext("/uploadStatement(...)");
         ctx.setParameter("fileBase64", base64);
         ctx.execute().then(() => {
-          MessageToast.show("Uploaded and matched");
+          MessageToast.show("Vendor Statement uploaded and matched successfully");
           model.refresh();
+          
+          // Update nested views directly
+          const oCockpitView = this.byId("cockpitView");
+          if (oCockpitView) {
+            oCockpitView.getController().loadKpis();
+          }
+          const oWorkbenchView = this.byId("workbenchView");
+          if (oWorkbenchView) {
+            oWorkbenchView.getController().loadData();
+          }
         }).catch(e => MessageToast.show("Error: " + e.message));
       });
     },
-
+    onRunMatching: function () {
+      const model = this.getView().getModel();
+      const ctx = model.bindContext("/runMatching(...)");
+      ctx.setParameter("statementUploadId", null);
+      ctx.execute().then(() => {
+        MessageToast.show("Matching engine executed successfully");
+        model.refresh();
+        
+        // Update nested views directly
+        const oCockpitView = this.byId("cockpitView");
+        if (oCockpitView) {
+          oCockpitView.getController().loadKpis();
+        }
+        const oWorkbenchView = this.byId("workbenchView");
+        if (oWorkbenchView) {
+          oWorkbenchView.getController().loadData();
+        }
+      }).catch(e => MessageToast.show("Error: " + e.message));
+    },
     onResolveException: function (oEvent) {
       const exceptionId = oEvent.getSource().data("exceptionId");
       const model = this.getView().getModel();
@@ -48,7 +73,36 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast"], function (Co
         MessageToast.show("Resolved");
         model.refresh();
       }).catch(e => MessageToast.show("Error: " + e.message));
+    },
+    onTabSelect: function (oEvent) {
+      const sKey = oEvent.getParameter("key");
+      if (sKey === "cockpit") {
+        const oCockpitView = this.byId("cockpitView");
+        if (oCockpitView) {
+          oCockpitView.getController().loadKpis();
+        }
+      } else if (sKey === "workbench") {
+        const oWorkbenchView = this.byId("workbenchView");
+        if (oWorkbenchView) {
+          oWorkbenchView.getController().loadData();
+        }
+      }
+    },
+    onNavBack: function () {
+      this.getOwnerComponent().getRouter().navTo("home");
+    },
+    onLogout: function () {
+      MessageBox.confirm("Are you sure you want to log out?", {
+        title: "Confirm Logout",
+        actions: [MessageBox.Action.YES, MessageBox.Action.NO],
+        emphasizedAction: MessageBox.Action.NO,
+        onClose: (sAction) => {
+          if (sAction === MessageBox.Action.YES) {
+            sessionStorage.removeItem("vr_user");
+            this.getOwnerComponent().getRouter().navTo("login");
+          }
+        }
+      });
     }
-
   });
 });
