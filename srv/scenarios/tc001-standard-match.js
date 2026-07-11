@@ -2,7 +2,13 @@
 async function evaluateTC001(vendorLine, poRecord, grirRow) {
   if (!poRecord || !grirRow) return null;
   const poQty = poRecord.poQty, grQty = grirRow.goodsReceiptQty, invQty = grirRow.invoicedQuantity;
-  if (poQty === grQty && grQty === invQty) {
+  
+  // Calculate basic amount of invoice (excluding GST/TDS tax)
+  const basicAmount = vendorLine.invoiceAmount - (vendorLine.gstTdsAmount || 0);
+  const poAmount = poRecord.poAmount;
+  
+  // Verify both quantities and unit rate / total basic price match
+  if (poQty === grQty && grQty === invQty && Math.abs(basicAmount - poAmount) <= 1.00) {
     return { code: 'MATCHED/3WAY', rule: 'TC001_STANDARD_MATCH', businessRole: 'AP' };
   }
   return null;

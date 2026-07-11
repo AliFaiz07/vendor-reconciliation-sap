@@ -39,7 +39,7 @@
               <ColumnListItem>
                 <cells>
                   <Text text="{vendorInvoiceNo}"/>
-                  <Text text="{invoiceAmount}"/>
+                  <Text text="{path: 'invoiceAmount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2, maxFractionDigits: 2}}"/>
                   <Text text="{sourceVendorCode}"/>
                 </cells>
               </ColumnListItem>
@@ -49,16 +49,20 @@
         <IconTabFilter text="Match Results" key="results">
           <Table items="{/MatchResults}">
             <columns>
+              <Column><Text text="Invoice No"/></Column>
               <Column><Text text="Outcome"/></Column>
+              <Column><Text text="Reason"/></Column>
               <Column><Text text="Rule"/></Column>
               <Column><Text text="Amount Delta"/></Column>
             </columns>
             <items>
               <ColumnListItem>
                 <cells>
+                  <Text text="{invoiceNo}"/>
                   <ObjectStatus text="{outcomeCode}" state="{= ${outcomeCode} === 'MATCHED' || ${outcomeCode} === 'MATCHED/3WAY' ? 'Success' : (${outcomeCode}.indexOf('UNMATCHED') !== -1 ? 'Error' : 'Warning') }"/>
+                  <Text text="{reason}"/>
                   <Text text="{matchRuleApplied}"/>
-                  <Text text="{amountDelta}"/>
+                  <Text text="{path: 'amountDelta', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2, maxFractionDigits: 2}}"/>
                 </cells>
               </ColumnListItem>
             </items>
@@ -67,20 +71,18 @@
         <IconTabFilter text="Exceptions" key="exceptions">
           <Table items="{/Exceptions}">
             <columns>
+              <Column><Text text="Invoice No"/></Column>
               <Column><Text text="Outcome"/></Column>
               <Column><Text text="Status"/></Column>
-              <Column><Text text="Action"/></Column>
+              <Column><Text text="Recommended Action"/></Column>
             </columns>
             <items>
               <ColumnListItem>
                 <cells>
+                  <Text text="{invoiceNo}"/>
                   <ObjectStatus text="{outcomeCode}" state="{= ${outcomeCode} === 'MATCHED' || ${outcomeCode} === 'MATCHED/3WAY' ? 'Success' : (${outcomeCode}.indexOf('UNMATCHED') !== -1 ? 'Error' : 'Warning') }"/>
                   <ObjectStatus text="{status}" state="{= ${status} === 'RESOLVED' ? 'Success' : 'Warning' }"/>
-                  <Button text="Resolve" press="onResolveException">
-                    <customData>
-                      <core:CustomData key="exceptionId" value="{ID}"/>
-                    </customData>
-                  </Button>
+                  <Text text="{recommendedAction}"/>
                 </cells>
               </ColumnListItem>
             </items>

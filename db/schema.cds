@@ -30,6 +30,10 @@ entity VendorMaster : cuid, managed {
   taxNumber1           : String(20);
   paymentTerms         : String(4);
   currency             : String(3);
+  pan                  : String(10);
+  state                : String(30);
+  tdsSection           : String(10);
+  isMsme               : Boolean;
 }
 
 entity VendorDocLines : cuid, managed {
@@ -43,6 +47,10 @@ entity VendorDocLines : cuid, managed {
   paymentReference      : String(10);
   sourceVendorCode      : String(10);
   sourceGstin           : String(20);
+  irn                   : String(64);
+  irnStatus             : String(20);
+  eWayBill              : String(20);
+  gstr2bStatus          : String(20);
 }
 
 entity MatchResults : cuid, managed {
@@ -52,15 +60,21 @@ entity MatchResults : cuid, managed {
   amountDelta      : Decimal(15,2);
   matchRuleApplied : String(40);
   businessRole     : String(30);
+  invoiceNo        : String(30);
+  reason           : String(255);
 }
-
+ 
 entity Exceptions : cuid, managed {
   matchResult      : Association to MatchResults;
+  invoiceNo        : String(30);
   outcomeCode      : String(40);
   status           : String(20) default 'OPEN';
-  resolutionNote   : String(500);
+  recommendedAction : String(500);
   assignedTo       : String(80);
   sbpaInstanceId   : String(60);
+  priority         : String(10);
+  ageInDays        : Integer;
+  msmeAlert        : Boolean;
 }
 
 entity AuditLog : cuid, managed {

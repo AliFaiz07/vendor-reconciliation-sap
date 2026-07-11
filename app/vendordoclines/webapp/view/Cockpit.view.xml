@@ -312,7 +312,7 @@
                     <Column hAlign="Right"><Text text="Amount"/></Column>
                     <Column hAlign="Center"><Text text="Days Open"/></Column>
                     <Column hAlign="Center"><Text text="Priority"/></Column>
-                    <Column hAlign="Center"><Text text="Action"/></Column>
+                    <Column hAlign="Center"><Text text="Recommended Action"/></Column>
                   </columns>
                   <items>
                     <ColumnListItem>
@@ -323,7 +323,7 @@
                         <Text text="{cockpit>amount}" class="vrBold"/>
                         <ObjectStatus text="{cockpit>days}d" state="{cockpit>daysState}" icon="sap-icon://date-time"/>
                         <ObjectStatus text="{cockpit>priority}" state="{cockpit>priorityState}"/>
-                        <Button text="Resolve" icon="sap-icon://accept" type="Accept"/>
+                        <Text text="{cockpit>recommendedAction}" class="vrSmall"/>
                       </cells>
                     </ColumnListItem>
                   </items>

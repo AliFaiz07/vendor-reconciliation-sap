@@ -2,96 +2,251 @@ const cds = require('@sap/cds');
 const { runMatchRulesForLine } = require('./matching-engine');
 const { runScenarios } = require('../scenarios/registry');
 
-module.exports = (srv) => {
-  srv.on('runMatching', async (req) => {
-    const { statementUploadId } = req.data;
-    const { VendorDocLines, VendorLedgerItems, GrirSnapshot, PurchaseOrders, MatchResults, Exceptions, AuditLog } = cds.entities;
+const log = cds.log('matching-handler');
 
-    await DELETE.from(MatchResults);
-    await DELETE.from(Exceptions);
+function getReason(code) {
+  switch (code) {
+    case 'MATCHED': return "Exact match by invoice number and amount.";
+    case 'MATCHED/3WAY': return "Clean 3-way match (PO = GR = Invoice).";
+    case 'MATCHED/ROUNDING': return "Matched within rounding tolerance limit.";
+    case 'MATCHED/NEAR-MATCH': return "Matched by fuzzy invoice number comparison.";
+    case 'MATCHED/TIMING': return "Payment posted in transit timing difference.";
+    case 'MATCHED/TDS-194Q': return "Withholding tax TDS u/s 194Q correctly deducted.";
+    case 'UNMATCHED/QTY-MORE': return "Invoice quantity exceeds Goods Receipt quantity (reversal/shortage).";
+    case 'UNMATCHED/QTY-LESS': return "Invoice quantity is less than Goods Receipt quantity.";
+    case 'UNMATCHED/PRICE-HIGH': return "Invoice price exceeds PO rate beyond tolerance limit.";
+    case 'UNMATCHED/CN-MISSING': return "Credit Note issued by vendor is missing in buyer's ledger.";
+    case 'UNMATCHED/GR-PENDING': return "Goods Receipt (GR) is pending at the buyer plant.";
+    case 'UNMATCHED/GST-2B-GAP': return "Invoice missing in buyer GSTR-2B (vendor has not filed returns).";
+    case 'UNMATCHED/AMOUNT-DIFF': return "Invoice amount mismatch exceeds tolerance limit.";
+    default: return "No matching candidate found in buyer ledger.";
+  }
+}
 
-    let uploadId = statementUploadId;
-    if (!uploadId) {
-      const lastLine = await SELECT.one.from(VendorDocLines).orderBy('createdAt desc');
-      if (!lastLine) return req.error(400, 'No statement lines found in the system. Please upload a statement first.');
-      uploadId = lastLine.statementUploadId;
+function getRecommendedAction(code) {
+  switch (code) {
+    case 'UNMATCHED/QTY-MORE': return "Check short receipt. Reach out to stores/GRN team to verify physical receipt or reverse quantity.";
+    case 'UNMATCHED/PRICE-HIGH': return "Review price discrepancy. Request credit note from the vendor or approve rate difference.";
+    case 'UNMATCHED/CN-MISSING': return "Book Credit Note in buyer AP ledger.";
+    case 'UNMATCHED/GR-PENDING': return "Post Goods Receipt in MIGO for the PO reference.";
+    case 'UNMATCHED/GST-2B-GAP': return "Follow up with vendor to file GSTR-1; hold Input Tax Credit (ITC).";
+    case 'UNMATCHED/AMOUNT-DIFF': return "Verify invoice amount against purchase order and ledger entry.";
+    default: return "Verify invoice details with the vendor AR team.";
+  }
+}
+
+function withManaged(entry, req, entity) {
+  const user = req?.user?.id || 'system-engine';
+  const now = new Date().toISOString();
+  
+  const base = {
+    createdAt: now,
+    createdBy: user,
+    modifiedAt: now,
+    modifiedBy: user,
+    ...entry
+  };
+  
+  const cleaned = {};
+  for (const key in entity.elements) {
+    const element = entity.elements[key];
+    if (element.type === 'cds.Association' || element.virtual) continue;
+    
+    let val = base[key];
+    if (typeof val === 'boolean') {
+      val = val ? 1 : 0;
     }
+    cleaned[key] = val === undefined ? null : val;
+  }
+  
+  for (const key in base) {
+    if (key.endsWith('_ID')) {
+      cleaned[key] = base[key] === undefined ? null : base[key];
+    }
+  }
+  
+  return cleaned;
+}
 
-    const lines = await SELECT.from(VendorDocLines).where({ statementUploadId: uploadId });
+module.exports = (srv) => {
+  /**
+   * Action handler to run the matching and reconciliation engine.
+   * Compares the uploaded Vendor Statement lines (VendorDocLines) against 
+   * the internal Buyer Ledger (VendorLedgerItems) and GR/IR Snapshot.
+   */
+  srv.on('runMatching', async (req) => {
+    try {
+      const { statementUploadId } = req.data;
+      const { VendorDocLines, VendorLedgerItems, GrirSnapshot, PurchaseOrders, MatchResults, Exceptions, AuditLog, VendorMaster } = cds.entities;
 
-    for (const line of lines) {
-      const candidates = await SELECT.from(VendorLedgerItems).where({ supplier: line.sourceVendorCode });
-      const grirRow = line.poReference
-        ? await SELECT.one.from(GrirSnapshot).where({ purchaseOrder: line.poReference })
-        : null;
-      const poRecord = line.poReference
-        ? await SELECT.one.from(PurchaseOrders).where({ purchaseOrder: line.poReference })
-        : null;
+      let uploadId = statementUploadId;
+      if (!uploadId) {
+        log.info('No statementUploadId provided. Retrieving the latest upload context...');
+        const lastLine = await SELECT.one.from(VendorDocLines).orderBy('createdAt desc');
+        if (!lastLine) {
+          return req.error(400, 'No statement lines found in the database. Please upload a statement first.');
+        }
+        uploadId = lastLine.statementUploadId;
+      }
 
-      const scenarioResult = await runScenarios(line, poRecord, grirRow);
-      const baseOutcomes = await runMatchRulesForLine(line, candidates);
-      const outcomes = scenarioResult ? [scenarioResult, ...baseOutcomes] : baseOutcomes;
+      log.info(`Executing matching engine for upload: ${uploadId}`);
+      const lines = await SELECT.from(VendorDocLines).where({ statementUploadId: uploadId });
+      log.info(`Loaded ${lines.length} statement lines to match.`);
 
-      for (const outcome of outcomes) {
-        const matchResultId = cds.utils.uuid();
-        
-        let assignedRole = outcome.businessRole;
-        if (!assignedRole) {
-          if (outcome.rule === 'RULE_PO_GR' || outcome.code.includes('GR-PENDING')) {
-            assignedRole = 'GR';
-          } else if (outcome.rule === 'RULE_AMOUNT' || outcome.code.includes('AMOUNT-DIFF')) {
-            assignedRole = 'MIRO';
-          } else if (outcome.rule === 'RULE_GST_TDS' || outcome.code.includes('GST-DIFF')) {
-            assignedRole = 'BILLING';
-          } else {
-            assignedRole = 'AP';
+      // Wrap matching results generation in a database transaction block
+      await cds.tx(req).run(async (tx) => {
+        log.info('Clearing previous match results and exceptions...');
+        await tx.run(DELETE.from('vendorrecon.db.MatchResults'));
+        await tx.run(DELETE.from('vendorrecon.db.Exceptions'));
+
+        for (const line of lines) {
+          const candidates = await tx.run(SELECT.from(VendorLedgerItems).where({ supplier: line.sourceVendorCode }));
+          const grirRow = line.poReference
+            ? await tx.run(SELECT.one.from(GrirSnapshot).where({ purchaseOrder: line.poReference }))
+            : null;
+          const poRecord = line.poReference
+            ? await tx.run(SELECT.one.from(PurchaseOrders).where({ purchaseOrder: line.poReference }))
+            : null;
+
+          // Run Scenario checks first (credit notes, timing, TDS, etc.)
+          const scenarioResult = await runScenarios(line, poRecord, grirRow, candidates);
+          // Run standard candidates matching
+          const baseOutcomes = await runMatchRulesForLine(line, candidates);
+          // Prioritize scenario matches exclusively if they exist
+          const outcomes = scenarioResult ? [scenarioResult] : baseOutcomes;
+
+          for (const outcome of outcomes) {
+            const matchResultId = cds.utils.uuid();
+            
+            let assignedRole = outcome.businessRole;
+            if (!assignedRole) {
+              if (outcome.rule === 'RULE_PO_GR' || outcome.code.includes('GR-PENDING')) {
+                assignedRole = 'GR';
+              } else if (outcome.rule === 'RULE_AMOUNT' || outcome.code.includes('AMOUNT-DIFF')) {
+                assignedRole = 'MIRO';
+              } else if (outcome.rule === 'RULE_GST_TDS' || outcome.code.includes('GST-DIFF')) {
+                assignedRole = 'BILLING';
+              } else {
+                assignedRole = 'AP';
+              }
+            }
+
+            const invoiceNo = line.vendorInvoiceNo;
+
+            // Determine amount delta
+            let amountDelta = 0;
+            if (outcome.delta != null) {
+              amountDelta = Math.abs(outcome.delta);
+            } else if (outcome.code && (outcome.code.startsWith('UNMATCHED') || outcome.code.includes('-DIFF') || outcome.code.includes('-PENDING') || outcome.code.includes('-GAP') || outcome.code.includes('-MISSING') || outcome.code === 'UNMATCHED')) {
+              amountDelta = Math.abs(line.invoiceAmount);
+            }
+
+            // Insert matching results
+            await tx.run(INSERT.into('vendorrecon.db.MatchResults').entries(withManaged({
+              ID: matchResultId,
+              vendorDocLine_ID: line.ID,
+              ledgerItem_ID: outcome.ledgerItemID || null,
+              outcomeCode: outcome.code,
+              amountDelta: amountDelta,
+              matchRuleApplied: outcome.rule,
+              businessRole: assignedRole,
+              invoiceNo: invoiceNo,
+              reason: getReason(outcome.code)
+            }, req, MatchResults)));
+ 
+            // If unmatched or exception, create an open exception record
+            if (outcome.code.startsWith('UNMATCHED') || outcome.code.includes('-DIFF') || outcome.code.includes('-PENDING') || outcome.code.includes('-GAP') || outcome.code.includes('-MISSING') || outcome.code === 'UNMATCHED') {
+              const vendor = await tx.run(SELECT.one.from(VendorMaster).where({ businessPartner: line.sourceVendorCode }));
+              
+              let priority = 'P3';
+              if (outcome.code === 'UNMATCHED/QTY-MORE' || 
+                  outcome.code === 'UNMATCHED/PRICE-HIGH' || 
+                  outcome.code === 'UNMATCHED/GST-2B-GAP' || 
+                  outcome.code === 'UNMATCHED/GR-PENDING' ||
+                  outcome.code === 'UNMATCHED/CN-MISSING' ||
+                  outcome.code === 'UNMATCHED/AMOUNT-DIFF') {
+                priority = 'P1';
+              }
+              
+              let ageInDays = 0;
+              if (line.invoiceDate) {
+                ageInDays = Math.max(0, Math.floor((new Date() - new Date(line.invoiceDate)) / 86400000));
+              }
+              
+              const msmeAlert = !!(vendor && (vendor.isMsme === true || vendor.isMsme === 1));
+              
+              await tx.run(INSERT.into('vendorrecon.db.Exceptions').entries(withManaged({
+                ID: cds.utils.uuid(),
+                matchResult_ID: matchResultId,
+                invoiceNo: invoiceNo,
+                outcomeCode: outcome.code,
+                status: 'OPEN',
+                priority,
+                ageInDays,
+                msmeAlert,
+                recommendedAction: getRecommendedAction(outcome.code)
+              }, req, Exceptions)));
+            }
+ 
+            // Write matching audit log
+            await tx.run(INSERT.into('vendorrecon.db.AuditLog').entries(withManaged({
+              ID: cds.utils.uuid(),
+              entityName: 'MatchResults',
+              entityKey: line.ID,
+              action: 'MATCH',
+              performedBy: req?.user?.id || 'system-engine',
+              afterValue: JSON.stringify(outcome),
+              performedAt: new Date().toISOString(),
+            }, req, AuditLog)));
           }
         }
+      });
 
-        await INSERT.into(MatchResults).entries({
-          ID: matchResultId,
-          vendorDocLine_ID: line.ID,
-          ledgerItem_ID: outcome.ledgerItemID || null,
-          outcomeCode: outcome.code,
-          amountDelta: outcome.delta || 0,
-          matchRuleApplied: outcome.rule,
-          businessRole: assignedRole,
-        });
-
-        if (outcome.code.startsWith('UNMATCHED') || outcome.code.includes('-DIFF') || outcome.code.includes('-PENDING')) {
-          await INSERT.into(Exceptions).entries({
-            ID: cds.utils.uuid(),
-            matchResult_ID: matchResultId,
-            outcomeCode: outcome.code,
-            status: 'OPEN',
-          });
-        }
-
-        await INSERT.into(AuditLog).entries({
-          ID: cds.utils.uuid(),
-          entityName: 'MatchResults',
-          entityKey: line.ID,
-          action: 'MATCH',
-          performedBy: 'demo-user',
-          afterValue: JSON.stringify(outcome),
-          performedAt: new Date(),
-        });
+      log.info('Matching cycle completed successfully. Transaction committed.');
+      return 'Matching completed';
+    } catch (err) {
+      log.error('Matching engine cycle execution failed:', err);
+      if (typeof req.error === 'function') {
+        return req.error(500, `Matching failed: ${err.message}`);
       }
+      throw err;
     }
-    return 'Matching completed';
   });
 
   srv.on('resolveException', async (req) => {
-    const { exceptionId, note } = req.data;
-    const { Exceptions } = cds.entities;
-    await UPDATE(Exceptions, exceptionId).with({ status: 'RESOLVED', resolutionNote: note });
-    return 'Resolved';
+    try {
+      const { exceptionId } = req.data;
+      if (!exceptionId) return req.error(400, 'Exception ID is required.');
+      
+      await cds.tx(req).run(async (tx) => {
+        await tx.run(UPDATE('vendorrecon.db.Exceptions', exceptionId).with({ status: 'RESOLVED' }));
+      });
+      
+      log.info(`Exception ${exceptionId} resolved successfully.`);
+      return 'Resolved';
+    } catch (err) {
+      log.error('Failed to resolve exception:', err);
+      return req.error(500, `Resolution failed: ${err.message}`);
+    }
   });
-
+ 
+  /**
+   * Action handler to reopen a resolved exception.
+   */
   srv.on('reopenException', async (req) => {
-    const { exceptionId } = req.data;
-    const { Exceptions } = cds.entities;
-    await UPDATE(Exceptions, exceptionId).with({ status: 'OPEN', resolutionNote: null });
-    return 'Reopened';
+    try {
+      const { exceptionId } = req.data;
+      if (!exceptionId) return req.error(400, 'Exception ID is required.');
+      
+      await cds.tx(req).run(async (tx) => {
+        await tx.run(UPDATE('vendorrecon.db.Exceptions', exceptionId).with({ status: 'OPEN' }));
+      });
+      
+      log.info(`Exception ${exceptionId} reopened successfully.`);
+      return 'Reopened';
+    } catch (err) {
+      log.error('Failed to reopen exception:', err);
+      return req.error(500, `Reopening failed: ${err.message}`);
+    }
   });
 };

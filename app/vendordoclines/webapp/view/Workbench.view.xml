@@ -22,23 +22,20 @@
         <Column><Text text="Outcome"/></Column>
         <Column hAlign="End"><Text text="Δ Amount"/></Column>
         <Column><Text text="Status"/></Column>
-        <Column hAlign="End"><Text text="Actions"/></Column>
+        <Column><Text text="Recommended Action"/></Column>
       </columns>
       <items>
         <ColumnListItem type="Active" press="onOpenDetails">
           <cells>
             <Text text="{wb>vendorInvoiceNo}"/>
             <Text text="{wb>invoiceDate}"/>
-            <Text text="{wb>invoiceAmount}"/>
+            <Text text="{path: 'wb>invoiceAmount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2, maxFractionDigits: 2}}"/>
             <Text text="{wb>poReference}"/>
             <Text text="{wb>sourceVendorCode}"/>
             <ObjectStatus text="{wb>outcomeCode}" state="{wb>outcomeState}"/>
-            <Text text="{wb>amountDelta}"/>
+            <Text text="{path: 'wb>amountDelta', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2, maxFractionDigits: 2}}"/>
             <ObjectStatus text="{wb>exStatus}" state="{wb>exState}"/>
-            <HBox>
-              <Button text="Resolve" visible="{wb>canResolve}" press="onResolvePress"/>
-              <Button text="Reopen" visible="{wb>canReopen}" press="onReopenPress"/>
-            </HBox>
+            <Text text="{wb>recommendedAction}"/>
           </cells>
         </ColumnListItem>
       </items>
@@ -53,25 +50,26 @@
         <Panel headerText="Vendor Statement Line">
           <ObjectAttribute title="Invoice #" text="{wb>/active/vendorInvoiceNo}"/>
           <ObjectAttribute title="Date" text="{wb>/active/invoiceDate}"/>
-          <ObjectAttribute title="Amount" text="{wb>/active/invoiceAmount}"/>
+          <ObjectAttribute title="Amount" text="{path: 'wb>/active/invoiceAmount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2, maxFractionDigits: 2}}"/>
           <ObjectAttribute title="Currency" text="{wb>/active/currency}"/>
           <ObjectAttribute title="PO Reference" text="{wb>/active/poReference}"/>
           <ObjectAttribute title="Vendor Code" text="{wb>/active/sourceVendorCode}"/>
         </Panel>
         <Panel headerText="Matched Ledger Item" class="sapUiSmallMarginTop">
           <ObjectAttribute title="Accounting Doc" text="{wb>/active/ledgerDoc}"/>
-          <ObjectAttribute title="Amount" text="{wb>/active/ledgerAmount}"/>
+          <ObjectAttribute title="Amount" text="{path: 'wb>/active/ledgerAmount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2, maxFractionDigits: 2}}"/>
           <ObjectAttribute title="Cleared" text="{wb>/active/ledgerCleared}"/>
         </Panel>
-        <TextArea id="resolutionNote" value="{wb>/active/note}" rows="3" width="100%"
-          placeholder="Explain how this exception was resolved…" class="sapUiSmallMarginTop"
-          visible="{wb>/active/hasException}" editable="{wb>/active/canEditNote}"/>
+        <Panel headerText="Recommended Action" visible="{wb>/active/hasException}" class="sapUiSmallMarginTop">
+          <Text text="{wb>/active/recommendedAction}"/>
+          <Input id="resolutionNote" placeholder="Enter resolution note..." visible="{wb>/active/canResolve}" class="sapUiSmallMarginTop"/>
+        </Panel>
       </VBox>
     </content>
     <buttons>
+      <Button text="Resolve Exception" type="Accept" press="onResolveFromDialog" visible="{wb>/active/canResolve}"/>
+      <Button text="Reopen Exception" type="Emphasized" press="onReopenFromDialog" visible="{wb>/active/canReopen}"/>
       <Button text="Close" press="onCloseDetails"/>
-      <Button text="Mark RESOLVED" type="Emphasized" visible="{wb>/active/canResolve}" press="onResolveFromDialog"/>
-      <Button text="Reopen" visible="{wb>/active/canReopen}" press="onReopenFromDialog"/>
     </buttons>
   </Dialog>
 </mvc:View>

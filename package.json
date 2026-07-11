@@ -1,20 +1,26 @@
 {
+  "name": "vendor_reconcile",
+  "version": "1.0.0",
+  "description": "Vendor Reconciliation & Match Exception Engine",
+  "main": "index.js",
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds watch"
+  },
   "dependencies": {
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@cap-js/sqlite": "^3.0.2"
   },
-
-
-   "cds": {
-  "requires": {
-    "db": {
-      "kind": "sqlite",
-      "credentials": { "url": "db.sqlite" }
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": "db.sqlite"
+        }
+      }
     }
   }
-
-
-}
 }

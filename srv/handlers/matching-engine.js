@@ -1,6 +1,11 @@
-const TOLERANCE_AMOUNT = 0;
+const TOLERANCE_AMOUNT = 1.00;
 const TIMING_WINDOW_DAYS = 7;
 const FUZZY_EDIT_DISTANCE = 2;
+
+function cleanInvoiceNo(invNo) {
+  if (!invNo) return '';
+  return invNo.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+}
 
 function levenshtein(a, b) {
   if (!a || !b) return 99;
@@ -19,15 +24,25 @@ function levenshtein(a, b) {
 function daysBetween(d1, d2) { return (new Date(d1) - new Date(d2)) / 86400000; }
 
 function matchInvoiceNumber(vendorLine, ledgerItem) {
-  if (vendorLine.vendorInvoiceNo === ledgerItem.accountingDocument) return { code: 'MATCHED', rule: 'RULE_INVOICE_NO' };
-  const dist = levenshtein(vendorLine.vendorInvoiceNo, ledgerItem.accountingDocument);
+  const vInv = vendorLine.vendorInvoiceNo || '';
+  const lDoc = ledgerItem.accountingDocument || '';
+  if (vInv === lDoc) return { code: 'MATCHED', rule: 'RULE_INVOICE_NO' };
+  
+  const vInvClean = cleanInvoiceNo(vInv);
+  const lDocClean = cleanInvoiceNo(lDoc);
+  if (vInvClean && lDocClean && (vInvClean === lDocClean || (vInvClean.length > 3 && lDocClean.endsWith(vInvClean)) || (lDocClean.length > 3 && vInvClean.endsWith(lDocClean)))) {
+    return { code: 'MATCHED/NEAR-MATCH', rule: 'RULE_INVOICE_NO_CLEAN' };
+  }
+
+  const dist = levenshtein(vInv, lDoc);
   if (dist <= FUZZY_EDIT_DISTANCE) return { code: 'MATCHED/NEAR-MATCH', rule: 'RULE_INVOICE_NO_FUZZY' };
   return null;
 }
 
 function matchAmount(vendorLine, ledgerItem) {
   const delta = Math.abs(vendorLine.invoiceAmount - ledgerItem.amountInTransCrcy);
-  if (delta <= TOLERANCE_AMOUNT) return { code: 'MATCHED', rule: 'RULE_AMOUNT', delta: 0 };
+  if (delta === 0) return { code: 'MATCHED', rule: 'RULE_AMOUNT', delta: 0 };
+  if (delta <= TOLERANCE_AMOUNT) return { code: 'MATCHED/ROUNDING', rule: 'RULE_AMOUNT_ROUNDING', delta };
   return { code: 'UNMATCHED/AMOUNT-DIFF', rule: 'RULE_AMOUNT', delta };
 }
 

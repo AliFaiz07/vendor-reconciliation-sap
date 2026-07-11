@@ -54,9 +54,9 @@ sap.ui.define([
     var wb = (b / total * 300).toFixed(1);
     var wc = (c / total * 300).toFixed(1);
     return '<svg width="300" height="40" xmlns="http://www.w3.org/2000/svg">' +
-      '<rect x="0" y="8" width="' + wa + '" height="24" fill="#1B8E3A" rx="3 0 0 3"/>' +
+      '<rect x="0" y="8" width="' + wa + '" height="24" fill="#1B8E3A" rx="3"/>' +
       '<rect x="' + wa + '" y="8" width="' + wb + '" height="24" fill="#E06C00"/>' +
-      '<rect x="' + (+wa + +wb) + '" y="8" width="' + wc + '" height="24" fill="#AA0808" rx="0 3 3 0"/>' +
+      '<rect x="' + (+wa + +wb) + '" y="8" width="' + wc + '" height="24" fill="#AA0808" rx="3"/>' +
       '<text x="' + (wa / 2) + '" y="24" text-anchor="middle" font-size="10" fill="#fff" font-family="72,Arial,sans-serif">' + a + '</text>' +
       '<text x="' + (+wa + wb / 2) + '" y="24" text-anchor="middle" font-size="10" fill="#fff" font-family="72,Arial,sans-serif">' + b + '</text>' +
       '<text x="' + (+wa + +wb + wc / 2) + '" y="24" text-anchor="middle" font-size="10" fill="#fff" font-family="72,Arial,sans-serif">' + c + '</text>' +
@@ -142,11 +142,11 @@ sap.ui.define([
 
           /* ── Pending Exceptions ──────────────────────────────────────── */
           k.pendingExceptions = [
-            { id: "EX-0047", vendor: "Vasavi Castings",   reason: "Payment Reference Missing",  amount: "₹1,50,000",    days: 5, priority: "High" },
-            { id: "EX-0046", vendor: "Vasavi Castings",   reason: "Date Out of Window (>30d)",   amount: "₹99,999",      days: 3, priority: "High" },
-            { id: "EX-0045", vendor: "ABC Suppliers",     reason: "Amount Mismatch > Threshold", amount: "₹25,480",      days: 2, priority: "Medium" },
-            { id: "EX-0044", vendor: "XYZ Components",    reason: "GST/TDS Discrepancy",         amount: "₹8,250",       days: 1, priority: "Medium" },
-            { id: "EX-0043", vendor: "Global Parts Co.",  reason: "Duplicate Invoice Suspected", amount: "₹42,000",      days: 0, priority: "Low" }
+            { id: "EX-0047", vendor: "Vasavi Castings",   reason: "Payment Reference Missing",  amount: "₹1,50,000",    days: 5, priority: "High", recommendedAction: "Verify UTR reference and post ledger clearance." },
+            { id: "EX-0046", vendor: "Vasavi Castings",   reason: "Date Out of Window (>30d)",   amount: "₹99,999",      days: 3, priority: "High", recommendedAction: "Review payment terms with billing department." },
+            { id: "EX-0045", vendor: "ABC Suppliers",     reason: "Amount Mismatch > Threshold", amount: "₹25,480",      days: 2, priority: "Medium", recommendedAction: "Review rate differences; request credit note." },
+            { id: "EX-0044", vendor: "XYZ Components",    reason: "GST/TDS Discrepancy",         amount: "₹8,250",       days: 1, priority: "Medium", recommendedAction: "Hold input tax credit; contact vendor to file GST." },
+            { id: "EX-0043", vendor: "Global Parts Co.",  reason: "Duplicate Invoice Suspected", amount: "₹42,000",      days: 0, priority: "Low", recommendedAction: "Confirm duplicate flag and cancel invoice." }
           ].map(function (e) {
             e.priorityState = e.priority === "High" ? "Error" : e.priority === "Medium" ? "Warning" : "Success";
             e.daysState     = ageState(e.days);

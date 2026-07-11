@@ -18,6 +18,7 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/model/json/JSONModel"], fun
           const ex = exMap.get(r.ID);
           return {
             vendorInvoiceNo: line?.vendorInvoiceNo || "—",
+            documentRef: line?.documentRef || "—",
             outcomeCode: r.outcomeCode,
             outcomeState: r.outcomeCode.startsWith("MATCHED") ? "Success" : "Error",
             exStatus: ex ? ex.status : "—",

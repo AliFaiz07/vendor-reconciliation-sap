@@ -24,7 +24,7 @@ sap.ui.define([
           const ledgerItem = r?.ledgerItem_ID ? lById.get(r.ledgerItem_ID) : undefined;
           const code = r?.outcomeCode ?? "UNMATCHED";
           return {
-            id: line.ID, vendorInvoiceNo: line.vendorInvoiceNo, invoiceDate: line.invoiceDate,
+            id: line.ID, vendorInvoiceNo: line.vendorInvoiceNo, documentRef: line.documentRef || "—", invoiceDate: line.invoiceDate,
             invoiceAmount: line.invoiceAmount, poReference: line.poReference || "—",
             sourceVendorCode: line.sourceVendorCode, currency: line.currency,
             outcomeCode: code, outcomeState: this._tone(code),
@@ -34,7 +34,7 @@ sap.ui.define([
             ledgerDoc: ledgerItem?.accountingDocument || "—",
             ledgerAmount: ledgerItem?.amountInTransCrcy || "—",
             ledgerCleared: ledgerItem?.isCleared ? "Yes" : "No",
-            note: ex?.resolutionNote || ""
+            recommendedAction: ex?.recommendedAction || "—"
           };
         });
         this._applyFilter();
@@ -50,9 +50,9 @@ sap.ui.define([
       const filter = model.getProperty("/filter");
       const q = (model.getProperty("/search") || "").toLowerCase();
       let rows = this._allRows;
-      if (filter === "MATCHED") rows = rows.filter(r => r.outcomeCode === "MATCHED");
+      if (filter === "MATCHED") rows = rows.filter(r => r.outcomeCode.startsWith("MATCHED"));
       if (filter === "UNMATCHED") rows = rows.filter(r => r.outcomeCode.startsWith("UNMATCHED"));
-      if (filter === "EXCEPTIONS") rows = rows.filter(r => r.outcomeCode !== "MATCHED" && !r.outcomeCode.startsWith("UNMATCHED"));
+      if (filter === "EXCEPTIONS") rows = rows.filter(r => !!r.exceptionId);
       if (filter === "OPEN") rows = rows.filter(r => r.exStatus === "OPEN");
       if (q) rows = rows.filter(r => `${r.vendorInvoiceNo} ${r.poReference} ${r.sourceVendorCode}`.toLowerCase().includes(q));
       model.setProperty("/rows", rows);
