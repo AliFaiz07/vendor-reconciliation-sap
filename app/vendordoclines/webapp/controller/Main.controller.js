@@ -8,6 +8,16 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast", "sap/m/Messag
         reader.readAsDataURL(file);
       });
     },
+    _refreshSubViews: function () {
+      const oCockpitView = this.byId("cockpitView");
+      if (oCockpitView) {
+        oCockpitView.getController().loadKpis();
+      }
+      const oWorkbenchView = this.byId("workbenchView");
+      if (oWorkbenchView) {
+        oWorkbenchView.getController().loadData();
+      }
+    },
     onUploadSapLedger: function () {
       const file = this.byId("sapLedgerUploader").oFileUpload.files[0];
       if (!file) return;
@@ -18,6 +28,7 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast", "sap/m/Messag
         ctx.execute().then(() => {
           MessageToast.show("SAP Ledger uploaded and database seeded successfully");
           model.refresh();
+          this._refreshSubViews();
         }).catch(e => MessageToast.show("Error: " + e.message));
       });
     },
@@ -31,16 +42,7 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast", "sap/m/Messag
         ctx.execute().then(() => {
           MessageToast.show("Vendor Statement uploaded and matched successfully");
           model.refresh();
-          
-          // Update nested views directly
-          const oCockpitView = this.byId("cockpitView");
-          if (oCockpitView) {
-            oCockpitView.getController().loadKpis();
-          }
-          const oWorkbenchView = this.byId("workbenchView");
-          if (oWorkbenchView) {
-            oWorkbenchView.getController().loadData();
-          }
+          this._refreshSubViews();
         }).catch(e => MessageToast.show("Error: " + e.message));
       });
     },
@@ -51,16 +53,7 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast", "sap/m/Messag
       ctx.execute().then(() => {
         MessageToast.show("Matching engine executed successfully");
         model.refresh();
-        
-        // Update nested views directly
-        const oCockpitView = this.byId("cockpitView");
-        if (oCockpitView) {
-          oCockpitView.getController().loadKpis();
-        }
-        const oWorkbenchView = this.byId("workbenchView");
-        if (oWorkbenchView) {
-          oWorkbenchView.getController().loadData();
-        }
+        this._refreshSubViews();
       }).catch(e => MessageToast.show("Error: " + e.message));
     },
     onResolveException: function (oEvent) {
@@ -72,6 +65,7 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast", "sap/m/Messag
       ctx.execute().then(() => {
         MessageToast.show("Resolved");
         model.refresh();
+        this._refreshSubViews();
       }).catch(e => MessageToast.show("Error: " + e.message));
     },
     onTabSelect: function (oEvent) {

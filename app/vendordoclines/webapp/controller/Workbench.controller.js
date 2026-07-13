@@ -5,6 +5,13 @@ sap.ui.define([
     onInit: function () {
       this._allRows = [];
       this.getView().setModel(new JSONModel({ filter: "ALL", search: "", rows: [], active: null }), "wb");
+      
+      try {
+        const router = this.getOwnerComponent().getRouter();
+        router.getRoute("main").attachPatternMatched(this.loadData, this);
+      } catch (err) {
+        console.warn("Router not available during Workbench onInit");
+      }
       this.loadData();
     },
     loadData: function () {

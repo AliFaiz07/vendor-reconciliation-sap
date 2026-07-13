@@ -72,7 +72,15 @@ sap.ui.define([
   /* ── Controller ───────────────────────────────────────────────────────── */
   return Controller.extend("vendordoclines.controller.Cockpit", {
 
-    onInit: function () { this.loadKpis(); },
+    onInit: function () {
+      try {
+        const router = this.getOwnerComponent().getRouter();
+        router.getRoute("main").attachPatternMatched(this.loadKpis, this);
+      } catch (err) {
+        console.warn("Router not available during Cockpit onInit");
+      }
+      this.loadKpis();
+    },
 
     loadKpis: function () {
       fetch("/api/v1/getCockpitKpis()")
