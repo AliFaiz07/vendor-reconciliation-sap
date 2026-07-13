@@ -127,13 +127,14 @@ sap.ui.define([
           k.aging31Pct    = Math.round(a2 / (k.openEx || 1) * 100);
 
           /* ── Top Vendors ─────────────────────────────────────────────── */
-          k.topVendors = [
+          var rawVendors = k.topVendors && k.topVendors.length ? k.topVendors : [
             { name: "Vasavi Castings Pvt. Ltd.", code: "1000507", exceptions: 4, risk: "High",   matchRate: 72,  invoices: 8  },
             { name: "ABC Suppliers Ltd.",         code: "1000502", exceptions: 3, risk: "Medium", matchRate: 80,  invoices: 12 },
             { name: "XYZ Components Pvt. Ltd.",   code: "1000510", exceptions: 2, risk: "Medium", matchRate: 85,  invoices: 10 },
             { name: "Global Parts Co.",            code: "1000498", exceptions: 1, risk: "Low",    matchRate: 95,  invoices: 6  },
             { name: "Precision Metals Ltd.",       code: "1000515", exceptions: 0, risk: "Low",    matchRate: 100, invoices: 5  }
-          ].map(function (v) {
+          ];
+          k.topVendors = rawVendors.map(function (v) {
             v.riskState      = riskState(v.risk);
             v.matchRateState = matchState(v.matchRate);
             v.exState        = v.exceptions >= 4 ? "Error" : v.exceptions >= 2 ? "Warning" : "Success";
@@ -141,35 +142,38 @@ sap.ui.define([
           });
 
           /* ── Pending Exceptions ──────────────────────────────────────── */
-          k.pendingExceptions = [
+          var rawEx = k.pendingExceptions && k.pendingExceptions.length ? k.pendingExceptions : [
             { id: "EX-0047", vendor: "Vasavi Castings",   reason: "Payment Reference Missing",  amount: "₹1,50,000",    days: 5, priority: "High", recommendedAction: "Verify UTR reference and post ledger clearance." },
             { id: "EX-0046", vendor: "Vasavi Castings",   reason: "Date Out of Window (>30d)",   amount: "₹99,999",      days: 3, priority: "High", recommendedAction: "Review payment terms with billing department." },
             { id: "EX-0045", vendor: "ABC Suppliers",     reason: "Amount Mismatch > Threshold", amount: "₹25,480",      days: 2, priority: "Medium", recommendedAction: "Review rate differences; request credit note." },
             { id: "EX-0044", vendor: "XYZ Components",    reason: "GST/TDS Discrepancy",         amount: "₹8,250",       days: 1, priority: "Medium", recommendedAction: "Hold input tax credit; contact vendor to file GST." },
             { id: "EX-0043", vendor: "Global Parts Co.",  reason: "Duplicate Invoice Suspected", amount: "₹42,000",      days: 0, priority: "Low", recommendedAction: "Confirm duplicate flag and cancel invoice." }
-          ].map(function (e) {
+          ];
+          k.pendingExceptions = rawEx.map(function (e) {
             e.priorityState = e.priority === "High" ? "Error" : e.priority === "Medium" ? "Warning" : "Success";
             e.daysState     = ageState(e.days);
             return e;
           });
 
           /* ── Recent Jobs ─────────────────────────────────────────────── */
-          k.recentJobs = [
+          var rawJobs = k.recentJobs && k.recentJobs.length ? k.recentJobs : [
             { time: "Today, 09:30 AM",       vendor: "Vasavi Castings Pvt. Ltd.", status: "Completed", matched: k.matchedCount, total: k.totalLines, pct: k.matchRate },
             { time: "Yesterday, 03:15 PM",   vendor: "ABC Suppliers Ltd.",        status: "Completed", matched: 12, total: 15, pct: 80 },
             { time: "Yesterday, 11:00 AM",   vendor: "XYZ Components Pvt. Ltd.", status: "Completed", matched: 17, total: 20, pct: 85 },
             { time: "08-Jul-2026, 05:45 PM", vendor: "Global Parts Co.",          status: "Completed", matched: 6,  total: 6,  pct: 100 }
-          ].map(function (j) {
+          ];
+          k.recentJobs = rawJobs.map(function (j) {
             j.matchState = matchState(j.pct);
             return j;
           });
 
           /* ── Approval Queue ──────────────────────────────────────────── */
-          k.approvalQueue = [
+          var rawApprovals = k.approvalQueue && k.approvalQueue.length ? k.approvalQueue : [
             { id: "APR-012", vendor: "Vasavi Castings",  amount: "₹2,49,999", type: "Exception Override", requestedBy: "A.Sharma",  dueDate: "10-Jul-2026", urgency: "High" },
             { id: "APR-011", vendor: "ABC Suppliers",    amount: "₹25,480",   type: "Amount Tolerance",   requestedBy: "M.Patel",   dueDate: "11-Jul-2026", urgency: "Medium" },
             { id: "APR-010", vendor: "XYZ Components",   amount: "₹8,250",    type: "GST Clarification",  requestedBy: "R.Gupta",   dueDate: "12-Jul-2026", urgency: "Low" }
-          ].map(function (a) {
+          ];
+          k.approvalQueue = rawApprovals.map(function (a) {
             a.urgencyState = riskState(a.urgency);
             return a;
           });

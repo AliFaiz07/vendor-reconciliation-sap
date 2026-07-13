@@ -38,6 +38,7 @@ entity VendorMaster : cuid, managed {
 
 entity VendorDocLines : cuid, managed {
   statementUploadId    : UUID;
+  uploadHeader         : Association to StatementUploads;
   vendorInvoiceNo       : String(16);
   invoiceDate           : Date;
   invoiceAmount         : Decimal(15,2);
@@ -51,6 +52,9 @@ entity VendorDocLines : cuid, managed {
   irnStatus             : String(20);
   eWayBill              : String(20);
   gstr2bStatus          : String(20);
+  taxCode               : String(4);
+  placeOfSupply         : String(30);
+  hsnCode               : String(10);
 }
 
 entity MatchResults : cuid, managed {
@@ -92,6 +96,7 @@ entity Users : cuid {
   passwordHash : String(200);
   fullName     : String(100);
   businessRole : String(30);
+  vendorCode   : String(10);
 }
 
 entity PurchaseOrders : cuid, managed {
@@ -100,4 +105,34 @@ entity PurchaseOrders : cuid, managed {
   poQty         : Decimal(13,3);
   poAmount      : Decimal(15,2);
   supplier      : String(10);
+}
+
+entity StatementUploads : cuid, managed {
+  vendorCode  : String(10);
+  companyCode : String(4);
+  period      : String(7); // e.g. "04-2026"
+  fiscalYear  : String(4); // e.g. "2026"
+  fileName    : String(100);
+  status      : String(20) default 'EXTRACTED'; // EXTRACTED, MATCHING, RECONCILED
+  isActive    : Boolean default true;
+  docLines    : Association to many VendorDocLines on docLines.uploadHeader = $self;
+}
+
+entity WorkflowHistory : cuid, managed {
+  exceptionID : UUID;
+  stepName    : String(50);
+  actor       : String(80);
+  action      : String(20); // DISPUTE, CN_ISSUED, RELEASED, RESOLVED
+  comment     : String(500);
+  timestamp   : Timestamp;
+}
+
+entity Gstr2bInvoices : cuid, managed {
+  supplierGstin  : String(15);
+  invoiceNumber  : String(16);
+  invoiceDate    : Date;
+  invoiceAmount  : Decimal(15,2);
+  taxAmount      : Decimal(15,2);
+  filingStatus   : String(20); // FILED, NOT_FILED
+  filingDate     : Date;
 }

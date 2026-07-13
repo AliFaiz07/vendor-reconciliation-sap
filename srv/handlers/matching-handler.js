@@ -77,7 +77,7 @@ module.exports = (srv) => {
   srv.on('runMatching', async (req) => {
     try {
       const { statementUploadId } = req.data;
-      const { VendorDocLines, VendorLedgerItems, GrirSnapshot, PurchaseOrders, MatchResults, Exceptions, AuditLog, VendorMaster } = cds.entities;
+      const { VendorDocLines, VendorLedgerItems, GrirSnapshot, PurchaseOrders, MatchResults, Exceptions, AuditLog, VendorMaster, WorkflowHistory } = cds.entities;
 
       let uploadId = statementUploadId;
       if (!uploadId) {
@@ -92,12 +92,19 @@ module.exports = (srv) => {
       log.info(`Executing matching engine for upload: ${uploadId}`);
       const lines = await SELECT.from(VendorDocLines).where({ statementUploadId: uploadId });
       log.info(`Loaded ${lines.length} statement lines to match.`);
+      const lineIds = lines.map(l => l.ID);
 
       // Wrap matching results generation in a database transaction block
       await cds.tx(req).run(async (tx) => {
-        log.info('Clearing previous match results and exceptions...');
-        await tx.run(DELETE.from('vendorrecon.db.MatchResults'));
-        await tx.run(DELETE.from('vendorrecon.db.Exceptions'));
+        log.info('Clearing previous match results and exceptions for this upload context...');
+        if (lineIds.length > 0) {
+          const matchingResults = await tx.run(SELECT.from(MatchResults).where({ vendorDocLine_ID: { in: lineIds } }));
+          const resultIds = matchingResults.map(r => r.ID);
+          if (resultIds.length > 0) {
+            await tx.run(DELETE.from(Exceptions).where({ matchResult_ID: { in: resultIds } }));
+            await tx.run(DELETE.from(MatchResults).where({ ID: { in: resultIds } }));
+          }
+        }
 
         for (const line of lines) {
           const candidates = await tx.run(SELECT.from(VendorLedgerItems).where({ supplier: line.sourceVendorCode }));
@@ -175,8 +182,9 @@ module.exports = (srv) => {
               
               const msmeAlert = !!(vendor && (vendor.isMsme === true || vendor.isMsme === 1));
               
+              const exceptionId = cds.utils.uuid();
               await tx.run(INSERT.into('vendorrecon.db.Exceptions').entries(withManaged({
-                ID: cds.utils.uuid(),
+                ID: exceptionId,
                 matchResult_ID: matchResultId,
                 invoiceNo: invoiceNo,
                 outcomeCode: outcome.code,
@@ -186,6 +194,16 @@ module.exports = (srv) => {
                 msmeAlert,
                 recommendedAction: getRecommendedAction(outcome.code)
               }, req, Exceptions)));
+
+              await tx.run(INSERT.into('vendorrecon.db.WorkflowHistory').entries(withManaged({
+                ID: cds.utils.uuid(),
+                exceptionID: exceptionId,
+                stepName: 'Intake/Match',
+                actor: 'system-engine',
+                action: 'CREATE',
+                comment: 'Exception automatically created by matching engine',
+                timestamp: new Date().toISOString()
+              }, req, WorkflowHistory)));
             }
  
             // Write matching audit log
@@ -215,11 +233,23 @@ module.exports = (srv) => {
 
   srv.on('resolveException', async (req) => {
     try {
-      const { exceptionId } = req.data;
+      const { exceptionId, note } = req.data;
       if (!exceptionId) return req.error(400, 'Exception ID is required.');
       
+      const { Exceptions, WorkflowHistory } = cds.entities;
+      
       await cds.tx(req).run(async (tx) => {
-        await tx.run(UPDATE('vendorrecon.db.Exceptions', exceptionId).with({ status: 'RESOLVED' }));
+        await tx.run(UPDATE(Exceptions, exceptionId).with({ status: 'RESOLVED' }));
+        
+        await tx.run(INSERT.into(WorkflowHistory).entries({
+          ID: cds.utils.uuid(),
+          exceptionID: exceptionId,
+          stepName: 'Resolution',
+          actor: req.user?.id || req.http?.req?.headers['x-user-role'] || 'AP_Specialist',
+          action: 'RESOLVE',
+          comment: note || 'Resolved by user',
+          timestamp: new Date().toISOString()
+        }));
       });
       
       log.info(`Exception ${exceptionId} resolved successfully.`);
@@ -230,16 +260,25 @@ module.exports = (srv) => {
     }
   });
  
-  /**
-   * Action handler to reopen a resolved exception.
-   */
   srv.on('reopenException', async (req) => {
     try {
       const { exceptionId } = req.data;
       if (!exceptionId) return req.error(400, 'Exception ID is required.');
       
+      const { Exceptions, WorkflowHistory } = cds.entities;
+      
       await cds.tx(req).run(async (tx) => {
-        await tx.run(UPDATE('vendorrecon.db.Exceptions', exceptionId).with({ status: 'OPEN' }));
+        await tx.run(UPDATE(Exceptions, exceptionId).with({ status: 'OPEN' }));
+        
+        await tx.run(INSERT.into(WorkflowHistory).entries({
+          ID: cds.utils.uuid(),
+          exceptionID: exceptionId,
+          stepName: 'Reopen',
+          actor: req.user?.id || req.http?.req?.headers['x-user-role'] || 'AP_Specialist',
+          action: 'REOPEN',
+          comment: 'Exception reopened for re-investigation',
+          timestamp: new Date().toISOString()
+        }));
       });
       
       log.info(`Exception ${exceptionId} reopened successfully.`);
@@ -247,6 +286,35 @@ module.exports = (srv) => {
     } catch (err) {
       log.error('Failed to reopen exception:', err);
       return req.error(500, `Reopening failed: ${err.message}`);
+    }
+  });
+
+  srv.on('raiseDispute', async (req) => {
+    try {
+      const { exceptionId, comment } = req.data;
+      if (!exceptionId) return req.error(400, 'Exception ID is required.');
+      
+      const { Exceptions, WorkflowHistory } = cds.entities;
+      
+      await cds.tx(req).run(async (tx) => {
+        await tx.run(UPDATE(Exceptions, exceptionId).with({ status: 'DISPUTED' }));
+        
+        await tx.run(INSERT.into(WorkflowHistory).entries({
+          ID: cds.utils.uuid(),
+          exceptionID: exceptionId,
+          stepName: 'Dispute',
+          actor: req.user?.id || req.http?.req?.headers['x-user-vendor'] || 'Vendor_AR',
+          action: 'DISPUTE',
+          comment: comment || 'Dispute raised by vendor',
+          timestamp: new Date().toISOString()
+        }));
+      });
+      
+      log.info(`Dispute raised on exception ${exceptionId} successfully.`);
+      return 'Disputed';
+    } catch (err) {
+      log.error('Failed to raise dispute:', err);
+      return req.error(500, `Dispute failed: ${err.message}`);
     }
   });
 };

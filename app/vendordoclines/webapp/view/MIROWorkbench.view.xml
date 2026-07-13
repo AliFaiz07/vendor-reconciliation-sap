@@ -56,7 +56,7 @@
 
           <GenericTile header="Posted Today" subheader="Clearing volume" class="sapUiTinyMarginEnd sapUiTinyMarginBottom" frameType="TwoByOne">
             <TileContent>
-              <NumericContent value="{miro>/postedToday}" valueColor="Good" icon="sap-icon://sys-enter-2" withMargin="false"/>
+              <NumericContent value="{miro>/postedTodayCount}" valueColor="Good" icon="sap-icon://sys-enter-2" withMargin="false"/>
             </TileContent>
           </GenericTile>
 

@@ -64,10 +64,31 @@
           <Text text="{wb>/active/recommendedAction}"/>
           <Input id="resolutionNote" placeholder="Enter resolution note..." visible="{wb>/active/canResolve}" class="sapUiSmallMarginTop"/>
         </Panel>
+        
+        <Panel headerText="Workflow &amp; Audit History" visible="{wb>/active/hasException}" class="sapUiSmallMarginTop">
+          <List items="{wb>/active/history}" noDataText="No workflow history recorded.">
+            <CustomListItem>
+              <HBox class="sapUiSmallMargin" justifyContent="SpaceBetween" alignItems="Center">
+                <VBox>
+                  <HBox alignItems="Center">
+                    <core:Icon src="{= ${wb>action} === 'CREATE' ? 'sap-icon://sys-enter-2' : (${wb>action} === 'RESOLVE' ? 'sap-icon://complete' : 'sap-icon://alert') }" 
+                               color="{= ${wb>action} === 'CREATE' ? 'Neutral' : (${wb>action} === 'RESOLVE' ? 'Positive' : 'Critical') }"
+                               class="sapUiTinyMarginEnd"/>
+                    <Label text="{wb>stepName} ({wb>action})" design="Bold"/>
+                  </HBox>
+                  <Text text="{wb>comment}" class="sapUiTinyMarginTop"/>
+                  <Text text="By: {wb>actor}" class="sapUiTinyMarginTop vrItalicText"/>
+                </VBox>
+                <Text text="{wb>timestamp}"/>
+              </HBox>
+            </CustomListItem>
+          </List>
+        </Panel>
       </VBox>
     </content>
     <buttons>
       <Button text="Resolve Exception" type="Accept" press="onResolveFromDialog" visible="{wb>/active/canResolve}"/>
+      <Button text="Dispute Exception" type="Reject" press="onDisputeFromDialog" visible="{wb>/active/canDispute}"/>
       <Button text="Reopen Exception" type="Emphasized" press="onReopenFromDialog" visible="{wb>/active/canReopen}"/>
       <Button text="Close" press="onCloseDetails"/>
     </buttons>

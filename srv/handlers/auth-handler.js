@@ -5,12 +5,17 @@ function hash(pw) { return crypto.createHash('sha256').update(pw).digest('hex');
 
 module.exports = (srv) => {
   srv.on('register', async (req) => {
-    const { username, email, password, fullName, businessRole } = req.data;
+    const { username, email, password, fullName, businessRole, vendorCode } = req.data;
     const { Users } = cds.entities;
     const existing = await SELECT.one.from(Users).where({ username });
     if (existing) return req.error(400, 'Username already exists');
+    
+    // Default vendorCode to username if it starts with 'V-' and role is vendor-side
+    const resolvedVendorCode = vendorCode || (['AR', 'BILLING'].includes(businessRole) ? username : null);
+    
     await INSERT.into(Users).entries({
       ID: cds.utils.uuid(), username, email, fullName, businessRole,
+      vendorCode: resolvedVendorCode,
       passwordHash: hash(password)
     });
     return 'Registered';
@@ -21,6 +26,11 @@ module.exports = (srv) => {
     const { Users } = cds.entities;
     const user = await SELECT.one.from(Users).where({ username, passwordHash: hash(password) });
     if (!user) return req.error(401, 'Invalid credentials');
-    return JSON.stringify({ username: user.username, businessRole: user.businessRole, fullName: user.fullName });
+    return JSON.stringify({
+      username: user.username,
+      businessRole: user.businessRole,
+      fullName: user.fullName,
+      vendorCode: user.vendorCode || (['AR', 'BILLING'].includes(user.businessRole) ? user.username : null)
+    });
   });
 };

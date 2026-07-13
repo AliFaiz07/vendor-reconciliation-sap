@@ -67,7 +67,37 @@ sap.ui.define([
     },
     onOpenDetails: function (oEvent) {
       const ctx = oEvent.getSource().getBindingContext("wb").getObject();
-      this.getView().getModel("wb").setProperty("/active", { ...ctx, hasException: !!ctx.exceptionId, canEditNote: ctx.exStatus === "OPEN" });
+      const activeObj = {
+        ...ctx,
+        hasException: !!ctx.exceptionId,
+        canResolve: ctx.exStatus === "OPEN" || ctx.exStatus === "DISPUTED",
+        canDispute: ctx.exStatus === "OPEN",
+        canReopen: ctx.exStatus === "RESOLVED",
+        history: []
+      };
+      
+      this.getView().getModel("wb").setProperty("/active", activeObj);
+      
+      if (ctx.exceptionId) {
+        fetch(`/api/v1/WorkflowHistory?$filter=exceptionID eq ${ctx.exceptionId}&$orderby=timestamp asc`)
+          .then(r => r.json())
+          .then(data => {
+            if (data && data.value) {
+              activeObj.history = data.value.map(h => {
+                return {
+                  timestamp: h.timestamp ? new Date(h.timestamp).toLocaleString() : "—",
+                  stepName: h.stepName,
+                  action: h.action,
+                  actor: h.actor,
+                  comment: h.comment
+                };
+              });
+              this.getView().getModel("wb").setProperty("/active", activeObj);
+            }
+          })
+          .catch(err => MessageToast.show("Error loading history: " + err.message));
+      }
+      
       this.byId("detailsDialog").open();
     },
     onCloseDetails: function () { this.byId("detailsDialog").close(); },
@@ -101,6 +131,19 @@ sap.ui.define([
       const active = this.getView().getModel("wb").getProperty("/active");
       this._reopen(active.exceptionId);
       this.byId("detailsDialog").close();
+    },
+    onDisputeFromDialog: function () {
+      const active = this.getView().getModel("wb").getProperty("/active");
+      const note = this.byId("resolutionNote").getValue();
+      const model = this.getView().getModel();
+      const ctx = model.bindContext("/raiseDispute(...)");
+      ctx.setParameter("exceptionId", active.exceptionId);
+      ctx.setParameter("comment", note || "Disputed via UI");
+      ctx.execute().then(() => { 
+        MessageToast.show("Dispute submitted successfully"); 
+        this.byId("detailsDialog").close();
+        this.loadData(); 
+      }).catch(e => MessageToast.show("Error: " + e.message));
     }
   });
 });

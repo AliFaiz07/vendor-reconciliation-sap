@@ -112,3 +112,7 @@
 .vrLegendGreen  { background: #1B8E3A; }
 .vrLegendOrange { background: #E06C00; }
 .vrLegendRed    { background: #AA0808; }
+
+.vrItalicText {
+  font-style: italic !important;
+}

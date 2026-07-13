@@ -11,7 +11,7 @@ module.exports = (srv) => {
    */
   srv.on('uploadStatement', async (req) => {
     try {
-      const { fileBase64 } = req.data;
+      const { fileBase64, companyCode = '1000', period = '04-2026', fiscalYear = '2026', fileName = 'statement.xlsx' } = req.data;
       if (!fileBase64) return req.error(400, 'Statement file data is missing.');
 
       const workbook = XLSX.read(Buffer.from(fileBase64, 'base64'), { type: 'buffer' });
@@ -19,7 +19,7 @@ module.exports = (srv) => {
       if (!workbook.SheetNames.length) return req.error(400, 'Uploaded Excel workbook is empty.');
       
       const sheet = parseSheet(workbook.Sheets[workbook.SheetNames[0]], 'VendorCode');
-      const { VendorDocLines, VendorMaster } = cds.entities;
+      const { VendorDocLines, VendorMaster, StatementUploads } = cds.entities;
 
       if (!sheet.length) {
         return req.error(400, "No rows found in the uploaded statement. Please ensure the columns match the template (including 'VendorCode').");
@@ -38,6 +38,7 @@ module.exports = (srv) => {
         return {
           ID: cds.utils.uuid(),
           statementUploadId,
+          uploadHeader_ID: statementUploadId,
           vendorInvoiceNo: row.VendorInvoiceNo ? String(row.VendorInvoiceNo) : `GEN-${cds.utils.uuid().slice(0, 8)}`,
           invoiceDate: row.InvoiceDate || null,
           invoiceAmount: row.InvoiceAmount || 0,
@@ -51,6 +52,9 @@ module.exports = (srv) => {
           irnStatus: row.IrnStatus || null,
           eWayBill: row.EwayBill || null,
           gstr2bStatus: row.Gstr2bStatus || null,
+          taxCode: row.TaxCode || null,
+          placeOfSupply: row.PlaceOfSupply || null,
+          hsnCode: row.HsnCode || null
         };
       }).filter(line => line !== null);
 
@@ -58,9 +62,27 @@ module.exports = (srv) => {
 
       // Execute operations within an OData database transaction
       await cds.tx(req).run(async (tx) => {
-        log.info('Clearing old statement items...');
-        await tx.run(DELETE.from(VendorDocLines));
-        
+        log.info('Deactivating previous active statement uploads for this vendor and period...');
+        await tx.run(
+          UPDATE(StatementUploads)
+            .set({ isActive: false })
+            .where({ vendorCode, companyCode, period, fiscalYear, isActive: true })
+        );
+
+        log.info('Creating new StatementUploads header...');
+        await tx.run(
+          INSERT.into(StatementUploads).entries({
+            ID: statementUploadId,
+            vendorCode,
+            companyCode,
+            period,
+            fiscalYear,
+            fileName,
+            status: 'EXTRACTED',
+            isActive: true
+          })
+        );
+
         log.info('Saving new statement lines to the database...');
         await tx.run(INSERT.into(VendorDocLines).entries(lines));
       });
