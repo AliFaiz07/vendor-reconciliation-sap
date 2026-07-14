@@ -1,5 +1,13 @@
 sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast", "sap/m/MessageBox"], function (Controller, MessageToast, MessageBox) {
   return Controller.extend("vendordoclines.controller.Main", {
+    formatDate: function (sDate) {
+      if (!sDate) return "—";
+      try {
+        return new Date(sDate).toLocaleString();
+      } catch (e) {
+        return sDate;
+      }
+    },
     _fileToBase64: function (file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();

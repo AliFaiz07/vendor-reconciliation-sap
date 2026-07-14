@@ -50,6 +50,7 @@
         <Panel headerText="Vendor Statement Line">
           <ObjectAttribute title="Invoice #" text="{wb>/active/vendorInvoiceNo}"/>
           <ObjectAttribute title="Date" text="{wb>/active/invoiceDate}"/>
+          <ObjectAttribute title="Upload Date/Time" text="{wb>/active/createdAt}"/>
           <ObjectAttribute title="Amount" text="{path: 'wb>/active/invoiceAmount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2, maxFractionDigits: 2}}"/>
           <ObjectAttribute title="Currency" text="{wb>/active/currency}"/>
           <ObjectAttribute title="PO Reference" text="{wb>/active/poReference}"/>

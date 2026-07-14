@@ -32,6 +32,7 @@ sap.ui.define([
           const code = r?.outcomeCode ?? "UNMATCHED";
           return {
             id: line.ID, vendorInvoiceNo: line.vendorInvoiceNo, documentRef: line.documentRef || "—", invoiceDate: line.invoiceDate,
+            createdAt: line.createdAt ? new Date(line.createdAt).toLocaleString() : "—",
             invoiceAmount: line.invoiceAmount, poReference: line.poReference || "—",
             sourceVendorCode: line.sourceVendorCode, currency: line.currency,
             outcomeCode: code, outcomeState: this._tone(code),

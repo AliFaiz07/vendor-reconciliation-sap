@@ -29,11 +29,21 @@
     <IconTabBar id="mainTabBar" select="onTabSelect">
       <items>
         <IconTabFilter text="Vendor Doc Lines" key="lines">
-          <Table items="{/VendorDocLines}">
+          <Table items="{
+            path: '/VendorDocLines',
+            parameters: {
+              $$operationMode: 'Server'
+            },
+            sorter: {
+              path: 'createdAt',
+              descending: true
+            }
+          }">
             <columns>
               <Column><Text text="Invoice No"/></Column>
               <Column><Text text="Amount"/></Column>
               <Column><Text text="Vendor Code"/></Column>
+              <Column><Text text="Upload Date/Time"/></Column>
             </columns>
             <items>
               <ColumnListItem>
@@ -41,13 +51,23 @@
                   <Text text="{vendorInvoiceNo}"/>
                   <Text text="{path: 'invoiceAmount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2, maxFractionDigits: 2}}"/>
                   <Text text="{sourceVendorCode}"/>
+                  <Text text="{path: 'createdAt', formatter: '.formatDate'}"/>
                 </cells>
               </ColumnListItem>
             </items>
           </Table>
         </IconTabFilter>
         <IconTabFilter text="Match Results" key="results">
-          <Table items="{/MatchResults}">
+          <Table items="{
+            path: '/MatchResults',
+            parameters: {
+              $$operationMode: 'Server'
+            },
+            sorter: {
+              path: 'createdAt',
+              descending: true
+            }
+          }">
             <columns>
               <Column><Text text="Invoice No"/></Column>
               <Column><Text text="Outcome"/></Column>
@@ -69,7 +89,16 @@
           </Table>
         </IconTabFilter>
         <IconTabFilter text="Exceptions" key="exceptions">
-          <Table items="{/Exceptions}">
+          <Table items="{
+            path: '/Exceptions',
+            parameters: {
+              $$operationMode: 'Server'
+            },
+            sorter: {
+              path: 'createdAt',
+              descending: true
+            }
+          }">
             <columns>
               <Column><Text text="Invoice No"/></Column>
               <Column><Text text="Outcome"/></Column>
