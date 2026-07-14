@@ -1,6 +1,8 @@
 const XLSX = require('xlsx');
 const cds = require('@sap/cds');
 const { parseSheet } = require('./xlsx-utils');
+const fs = require('fs');
+const path = require('path');
 
 const log = cds.log('seed-handler');
 
@@ -96,45 +98,65 @@ module.exports = (srv) => {
           seededSummary.push(`${poSheet.length} PO rows`);
         }
 
-        // Always seed default users and GSTR-2B
+        // Always seed users from CSV if it exists, otherwise fall back to defaults
         await tx.run(DELETE.from(Users));
-        const crypto = require('crypto');
-        const hash = (pw) => crypto.createHash('sha256').update(pw).digest('hex');
-        await tx.run(INSERT.into(Users).entries([
-          {
-            ID: cds.utils.uuid(),
-            username: 'admin',
-            email: 'admin@reconcile.com',
-            passwordHash: hash('admin'),
-            fullName: 'AP Manager (Admin)',
-            businessRole: 'AP'
-          },
-          {
-            ID: cds.utils.uuid(),
-            username: 'gr_user',
-            email: 'gr@reconcile.com',
-            passwordHash: hash('admin'),
-            fullName: 'GR Specialist',
-            businessRole: 'GR'
-          },
-          {
-            ID: cds.utils.uuid(),
-            username: 'miro_user',
-            email: 'miro@reconcile.com',
-            passwordHash: hash('admin'),
-            fullName: 'MIRO Agent',
-            businessRole: 'MIRO'
-          },
-          {
-            ID: cds.utils.uuid(),
-            username: 'V-1001',
-            email: 'sigma@reconcile.com',
-            passwordHash: hash('admin'),
-            fullName: 'Sigma Component AR',
-            businessRole: 'AR',
-            vendorCode: 'V-1001'
-          }
-        ]));
+        const csvPath = path.join(__dirname, '..', '..', 'db', 'data', 'vendorrecon.db-Users.csv');
+        let userEntries = [];
+        if (fs.existsSync(csvPath)) {
+          const workbook = XLSX.readFile(csvPath);
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(sheet);
+          userEntries = rows.map(row => ({
+            ID: row.ID || cds.utils.uuid(),
+            username: String(row.username),
+            email: String(row.email),
+            passwordHash: String(row.passwordHash),
+            fullName: String(row.fullName),
+            businessRole: String(row.businessRole),
+            vendorCode: row.vendorCode ? String(row.vendorCode) : null
+          }));
+        }
+
+        if (userEntries.length === 0) {
+          const crypto = require('crypto');
+          const hash = (pw) => crypto.createHash('sha256').update(pw).digest('hex');
+          userEntries = [
+            {
+              ID: cds.utils.uuid(),
+              username: 'admin',
+              email: 'admin@reconcile.com',
+              passwordHash: hash('admin'),
+              fullName: 'AP Manager (Admin)',
+              businessRole: 'AP'
+            },
+            {
+              ID: cds.utils.uuid(),
+              username: 'gr_user',
+              email: 'gr@reconcile.com',
+              passwordHash: hash('admin'),
+              fullName: 'GR Specialist',
+              businessRole: 'GR'
+            },
+            {
+              ID: cds.utils.uuid(),
+              username: 'miro_user',
+              email: 'miro@reconcile.com',
+              passwordHash: hash('admin'),
+              fullName: 'MIRO Agent',
+              businessRole: 'MIRO'
+            },
+            {
+              ID: cds.utils.uuid(),
+              username: 'V-1001',
+              email: 'sigma@reconcile.com',
+              passwordHash: hash('admin'),
+              fullName: 'Sigma Component AR',
+              businessRole: 'AR',
+              vendorCode: 'V-1001'
+            }
+          ];
+        }
+        await tx.run(INSERT.into(Users).entries(userEntries));
 
         await tx.run(DELETE.from(Gstr2bInvoices));
         await tx.run(INSERT.into(Gstr2bInvoices).entries([
