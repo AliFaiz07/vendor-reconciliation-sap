@@ -1,0 +1,11 @@
+---
+applications:
+  - name: vendor-reconcile
+    memory: 256M
+    disk_quota: 512M
+    buildpacks:
+      - nodejs_buildpack
+    path: .
+    random-route: true
+    env:
+      NODE_ENV: production

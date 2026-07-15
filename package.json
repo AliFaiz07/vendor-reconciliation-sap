@@ -8,10 +8,14 @@
     "watch": "cds watch"
   },
   "dependencies": {
+    "@cap-js/sqlite": "^3.0.2",
+    "@sap/cds": "^10.0.3",
+    "@sap/xsenv": "^6.2.1",
+    "@sap/xssec": "^4.13.3",
+    "passport": "^0.7.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@cap-js/sqlite": "^3.0.2",
     "playwright": "^1.61.1"
   },
   "cds": {
