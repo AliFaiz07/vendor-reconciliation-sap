@@ -22,7 +22,7 @@ When running the server (`npm run watch`), the API endpoint is:
   {
     "username": "demo_pr_user",
     "email": "pr.demo@company.com",
-    "password": "securepassword123",
+    "password": "admin",
     "fullName": "PR Indenter (Demo)",
     "businessRole": "PR"
   }
@@ -36,9 +36,12 @@ When running the server (`npm run watch`), the API endpoint is:
   ```json
   {
     "username": "demo_pr_user",
-    "password": "securepassword123"
+    "password": "admin"
   }
   ```
+
+![PR Indenter Login](file:///C:/Users/ali/OneDrive - Abhiyanta India Solutions Pvt Ltd/Pictures/Screenshots/Screenshot%202026-07-15%20170051.png)
+
 * **Expected Response**:
   ```json
   {
@@ -88,7 +91,7 @@ Once logged in, the PR Indenter can submit a new purchase requisition:
   {
     "username": "demo_po_user",
     "email": "po.demo@company.com",
-    "password": "securepassword123",
+    "password": "admin",
     "fullName": "PO Officer (Demo)",
     "businessRole": "PO"
   }
@@ -102,9 +105,12 @@ Once logged in, the PR Indenter can submit a new purchase requisition:
   ```json
   {
     "username": "demo_po_user",
-    "password": "securepassword123"
+    "password": "admin"
   }
   ```
+
+![PO Officer Login](file:///C:/Users/ali/OneDrive - Abhiyanta India Solutions Pvt Ltd/Pictures/Screenshots/Screenshot%202026-07-15%20170127.png)
+
 * **Expected Response**:
   ```json
   {
@@ -164,7 +170,7 @@ The PO Officer approves the PR, creates the PO, and sends it to the Vendor:
   {
     "username": "V-1001",
     "email": "portal.v1001@vendor.com",
-    "password": "securepassword123",
+    "password": "admin",
     "fullName": "Sigma Supplier Portal",
     "businessRole": "VENDOR",
     "vendorCode": "V-1001"
@@ -178,7 +184,7 @@ The PO Officer approves the PR, creates the PO, and sends it to the Vendor:
   ```json
   {
     "username": "V-1001",
-    "password": "securepassword123"
+    "password": "admin"
   }
   ```
 
@@ -229,7 +235,7 @@ The PO Officer approves the PR, creates the PO, and sends it to the Vendor:
   {
     "username": "demo_gr_user",
     "email": "gr.demo@company.com",
-    "password": "securepassword123",
+    "password": "admin",
     "fullName": "Warehouse GR Agent",
     "businessRole": "GR"
   }
@@ -242,7 +248,7 @@ The PO Officer approves the PR, creates the PO, and sends it to the Vendor:
   ```json
   {
     "username": "demo_gr_user",
-    "password": "securepassword123"
+    "password": "admin"
   }
   ```
 
@@ -283,7 +289,7 @@ The PO Officer approves the PR, creates the PO, and sends it to the Vendor:
   {
     "username": "demo_finance_user",
     "email": "fin.demo@company.com",
-    "password": "securepassword123",
+    "password": "admin",
     "fullName": "Finance Auditor",
     "businessRole": "FINANCE"
   }
@@ -296,7 +302,7 @@ The PO Officer approves the PR, creates the PO, and sends it to the Vendor:
   ```json
   {
     "username": "demo_finance_user",
-    "password": "securepassword123"
+    "password": "admin"
   }
   ```
 
@@ -321,6 +327,8 @@ The PO Officer approves the PR, creates the PO, and sends it to the Vendor:
    * **Endpoint**: `/runMatching` (POST)
    * **Headers**: `x-user-role: FINANCE`
    * **Request Body**: `{}`
+
+![Reconciliation Matching Run](file:///C:/Users/ali/OneDrive - Abhiyanta India Solutions Pvt Ltd/Pictures/Screenshots/Screenshot%202026-07-15%20170409.png)
 3. **Approve Cleared Invoice for AP Payment**:
    * **Endpoint**: `/approveForPayment` (POST)
    * **Headers**: `x-user-role: FINANCE`
@@ -345,7 +353,7 @@ The PO Officer approves the PR, creates the PO, and sends it to the Vendor:
   {
     "username": "demo_ap_user",
     "email": "ap.demo@company.com",
-    "password": "securepassword123",
+    "password": "admin",
     "fullName": "Accounts Payable Controller",
     "businessRole": "AP"
   }
@@ -358,7 +366,7 @@ The PO Officer approves the PR, creates the PO, and sends it to the Vendor:
   ```json
   {
     "username": "demo_ap_user",
-    "password": "securepassword123"
+    "password": "admin"
   }
   ```
 
