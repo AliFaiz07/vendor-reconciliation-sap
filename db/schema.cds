@@ -55,6 +55,8 @@ entity VendorDocLines : cuid, managed {
   taxCode               : String(4);
   placeOfSupply         : String(30);
   hsnCode               : String(10);
+  approvedForPayment    : Boolean default false;
+  paymentStatus         : String(20) default 'UNPAID'; // UNPAID, PROPOSED, PAID
 }
 
 entity MatchResults : cuid, managed {
@@ -99,12 +101,25 @@ entity Users : cuid {
   vendorCode   : String(10);
 }
 
+entity PurchaseRequisitions : cuid, managed {
+  prNumber    : String(10);
+  material    : String(80);
+  qty         : Decimal(13,3);
+  amount      : Decimal(15,2);
+  status      : String(20) default 'PENDING'; // PENDING, APPROVED, PO_CREATED
+  poReference : String(10);
+  indentor    : String(80);
+}
+
 entity PurchaseOrders : cuid, managed {
   purchaseOrder : String(10);
   poItem        : String(5);
   poQty         : Decimal(13,3);
   poAmount      : Decimal(15,2);
   supplier      : String(10);
+  material      : String(80);
+  status        : String(20) default 'CREATED'; // CREATED, APPROVED, SENT, DISPATCHED, GR_POSTED
+  receivedQty   : Decimal(13,3) default 0;
 }
 
 entity StatementUploads : cuid, managed {

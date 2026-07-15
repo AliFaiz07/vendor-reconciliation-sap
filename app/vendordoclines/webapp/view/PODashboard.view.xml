@@ -1,0 +1,120 @@
+<mvc:View controllerName="vendordoclines.controller.PODashboard"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns="sap.m"
+          xmlns:core="sap.ui.core">
+
+  <Page title="Purchase Order Workbench" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button icon="sap-icon://log" text="Logout" type="Reject" press="onLogout"/>
+    </headerContent>
+    
+    <VBox>
+      <!-- Premium Fiori Horizon Header -->
+      <core:HTML preferDOM="false"
+        content="&lt;div class='vrCockpitHeader'&gt;&lt;div class='vrCockpitHeaderInner'&gt;&lt;div class='vrCockpitHeaderTitle'&gt;Purchase Order (PO) Control Center&lt;/div&gt;&lt;div class='vrCockpitHeaderSubtitle'&gt;Approve Requisitions &amp;middot; Release Purchase Orders &amp;middot; Manage Procurement Lifecycle&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;"/>
+
+      <VBox class="sapUiMediumMargin">
+        
+        <!-- Tab 1: PR Inbox (Pending Conversion) -->
+        <Panel headerText="Purchase Requisition Inbox (Pending PO Conversion)" class="sapUiSmallMarginBottom">
+          <Table id="prInboxTable" items="{
+            path: '/PurchaseRequisitions',
+            parameters: {
+              $$operationMode: 'Server'
+            },
+            filters: [
+              { path: 'status', operator: 'EQ', value1: 'PENDING' },
+              { path: 'status', operator: 'EQ', value1: 'APPROVED' }
+            ]
+          }">
+            <columns>
+              <Column><Text text="PR Number"/></Column>
+              <Column><Text text="Material"/></Column>
+              <Column hAlign="End"><Text text="Quantity"/></Column>
+              <Column hAlign="End"><Text text="Est. Amount"/></Column>
+              <Column><Text text="Status"/></Column>
+              <Column><Text text="Indentor"/></Column>
+              <Column hAlign="Center"><Text text="Actions"/></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{prNumber}" class="vrCode"/>
+                  <Text text="{material}"/>
+                  <Text text="{qty}"/>
+                  <Text text="₹{path: 'amount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2}}"/>
+                  <ObjectStatus text="{status}" state="{= ${status} === 'PENDING' ? 'Warning' : 'Information' }"/>
+                  <Text text="{indentor}"/>
+                  <HBox justifyAlign="Center">
+                    <Button text="Approve" type="Accept" press="onApprovePR" visible="{= ${status} === 'PENDING' }" class="sapUiTinyMarginEnd"/>
+                    <Button text="Convert to PO" type="Emphasized" press="onOpenPOConversion" visible="{= ${status} === 'APPROVED' || ${status} === 'PENDING' }"/>
+                  </HBox>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+
+        <!-- Tab 2: PO Worklist -->
+        <Panel headerText="Purchase Orders Ledger (All POs)">
+          <Table id="poTable" items="{
+            path: '/PurchaseOrders',
+            parameters: {
+              $$operationMode: 'Server'
+            }
+          }">
+            <columns>
+              <Column><Text text="PO Number"/></Column>
+              <Column><Text text="Supplier"/></Column>
+              <Column><Text text="Material"/></Column>
+              <Column hAlign="End"><Text text="PO Qty"/></Column>
+              <Column hAlign="End"><Text text="PO Amount"/></Column>
+              <Column><Text text="Status"/></Column>
+              <Column hAlign="End"><Text text="Received Qty"/></Column>
+              <Column hAlign="Center"><Text text="Action"/></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{purchaseOrder}" class="vrCode"/>
+                  <Text text="{supplier}"/>
+                  <Text text="{material}"/>
+                  <Text text="{poQty}"/>
+                  <Text text="₹{path: 'poAmount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2}}"/>
+                  <ObjectStatus text="{status}" state="{= ${status} === 'CREATED' ? 'Warning' : (${status} === 'SENT' ? 'Information' : (${status} === 'DISPATCHED' ? 'None' : 'Success')) }"/>
+                  <Text text="{receivedQty}"/>
+                  <HBox justifyAlign="Center">
+                    <Button text="Send to Vendor" type="Accept" icon="sap-icon://paper-plane" press="onSendPO" visible="{= ${status} === 'CREATED' || ${status} === 'APPROVED' }"/>
+                    <Button text="Cancel PO" type="Reject" icon="sap-icon://sys-cancel" press="onCancelPO" visible="{= ${status} !== 'CANCELLED' &amp;&amp; ${status} !== 'GR_POSTED' }"/>
+                  </HBox>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+
+      </VBox>
+    </VBox>
+
+    <!-- Dialog for PO Conversion -->
+    <Dialog id="poDialog" title="Convert Requisition to PO" contentWidth="360px">
+      <content>
+        <VBox class="sapUiMediumMargin">
+          <Label text="Assign Supplier" required="true" class="sapUiTinyMarginBottom"/>
+          <ComboBox id="poSupplier" width="100%">
+            <core:Item key="V-1001" text="V-1001 (Sigma Component)"/>
+            <core:Item key="V-1002" text="V-1002 (Vasavi Castings)"/>
+            <core:Item key="V-1003" text="V-1003 (ABC Suppliers)"/>
+          </ComboBox>
+          <Label text="Purchase Order Number (Optional)" class="sapUiTinyMarginTop sapUiTinyMarginBottom"/>
+          <Input id="poCustomNumber" placeholder="Leave blank to auto-generate"/>
+        </VBox>
+      </content>
+      <buttons>
+        <Button text="Generate Purchase Order" type="Emphasized" press="onGeneratePO"/>
+        <Button text="Cancel" press="onClosePODialog"/>
+      </buttons>
+    </Dialog>
+
+  </Page>
+</mvc:View>

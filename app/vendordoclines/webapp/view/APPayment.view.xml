@@ -1,0 +1,153 @@
+<mvc:View controllerName="vendordoclines.controller.APPayment"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns="sap.m"
+          xmlns:core="sap.ui.core">
+
+  <VBox class="sapUiSmallMargin">
+    <VBox>
+
+      <VBox class="sapUiMediumMargin">
+        
+        <IconTabBar id="apTabBar" select="onTabSelect">
+          <items>
+            
+            <!-- Tab 1: Pending Payments -->
+            <IconTabFilter text="Approved Invoices" icon="sap-icon://invoice" key="approved">
+              <VBox>
+                <Toolbar>
+                  <Title text="Finance Approved Invoice Queue" level="H4"/>
+                  <ToolbarSpacer/>
+                  <Button text="Create Payment Proposal" type="Emphasized" icon="sap-icon://create-entry-active" press="onCreateProposal"/>
+                </Toolbar>
+                <Table id="approvedTable" mode="MultiSelect" items="{
+                  path: '/VendorDocLines',
+                  parameters: {
+                    $$operationMode: 'Server'
+                  },
+                  filters: [
+                    { path: 'approvedForPayment', operator: 'EQ', value1: true },
+                    { path: 'paymentStatus', operator: 'EQ', value1: 'UNPAID' }
+                  ]
+                }">
+                  <columns>
+                    <Column><Text text="Invoice Number"/></Column>
+                    <Column><Text text="Vendor Code"/></Column>
+                    <Column><Text text="Invoice Date"/></Column>
+                    <Column hAlign="End"><Text text="Amount"/></Column>
+                    <Column><Text text="PO Reference"/></Column>
+                    <Column><Text text="Status"/></Column>
+                  </columns>
+                  <items>
+                    <ColumnListItem>
+                      <cells>
+                        <Text text="{vendorInvoiceNo}" class="vrCode"/>
+                        <Text text="{sourceVendorCode}"/>
+                        <Text text="{invoiceDate}"/>
+                        <Text text="₹{path: 'invoiceAmount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2}}"/>
+                        <Text text="{poReference}" class="vrCode"/>
+                        <ObjectStatus text="{paymentStatus}" state="None"/>
+                      </cells>
+                    </ColumnListItem>
+                  </items>
+                </Table>
+              </VBox>
+            </IconTabFilter>
+
+            <!-- Tab 2: Proposals -->
+            <IconTabFilter text="Payment Proposals" icon="sap-icon://payment-approval" key="proposals">
+              <VBox>
+                <Toolbar>
+                  <Title text="Open Payment Proposals" level="H4"/>
+                  <ToolbarSpacer/>
+                  <Button text="Execute Payment Run (F110)" type="Accept" icon="sap-icon://money-bills" press="onOpenPaymentRun"/>
+                </Toolbar>
+                <Table id="proposalsTable" mode="MultiSelect" items="{
+                  path: '/VendorDocLines',
+                  parameters: {
+                    $$operationMode: 'Server'
+                  },
+                  filters: [
+                    { path: 'approvedForPayment', operator: 'EQ', value1: true },
+                    { path: 'paymentStatus', operator: 'EQ', value1: 'PROPOSED' }
+                  ]
+                }">
+                  <columns>
+                    <Column><Text text="Invoice Number"/></Column>
+                    <Column><Text text="Vendor Code"/></Column>
+                    <Column><Text text="Invoice Date"/></Column>
+                    <Column hAlign="End"><Text text="Amount"/></Column>
+                    <Column><Text text="PO Reference"/></Column>
+                    <Column><Text text="Status"/></Column>
+                  </columns>
+                  <items>
+                    <ColumnListItem>
+                      <cells>
+                        <Text text="{vendorInvoiceNo}" class="vrCode"/>
+                        <Text text="{sourceVendorCode}"/>
+                        <Text text="{invoiceDate}"/>
+                        <Text text="₹{path: 'invoiceAmount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2}}"/>
+                        <Text text="{poReference}" class="vrCode"/>
+                        <ObjectStatus text="{paymentStatus}" state="Warning"/>
+                      </cells>
+                    </ColumnListItem>
+                  </items>
+                </Table>
+              </VBox>
+            </IconTabFilter>
+
+            <!-- Tab 3: Paid Invoices -->
+            <IconTabFilter text="Payment History" icon="sap-icon://history" key="history">
+              <Table id="historyTable" items="{
+                path: '/VendorDocLines',
+                parameters: {
+                  $$operationMode: 'Server'
+                },
+                filters: [
+                  { path: 'paymentStatus', operator: 'EQ', value1: 'PAID' }
+                ]
+              }">
+                <columns>
+                  <Column><Text text="Invoice Number"/></Column>
+                  <Column><Text text="Vendor Code"/></Column>
+                  <Column hAlign="End"><Text text="Paid Amount"/></Column>
+                  <Column><Text text="PO Reference"/></Column>
+                  <Column><Text text="Payment Status"/></Column>
+                  <Column><Text text="Payment Reference (UTR)"/></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{vendorInvoiceNo}" class="vrCode"/>
+                      <Text text="{sourceVendorCode}"/>
+                      <Text text="₹{path: 'invoiceAmount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2}}"/>
+                      <Text text="{poReference}" class="vrCode"/>
+                      <ObjectStatus text="{paymentStatus}" state="Success"/>
+                      <Text text="{paymentReference}" class="vrCode"/>
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </IconTabFilter>
+
+          </items>
+        </IconTabBar>
+
+      </VBox>
+    </VBox>
+
+    <!-- Dialog for executing payment run -->
+    <Dialog id="payDialog" title="F110 Payment Run Parameters" contentWidth="360px">
+      <content>
+        <VBox class="sapUiMediumMargin">
+          <Label text="Payment Reference / UTR Number" required="true" class="sapUiTinyMarginBottom"/>
+          <Input id="payRefInput" placeholder="e.g. UTR-9901827" maxLength="20"/>
+        </VBox>
+      </content>
+      <buttons>
+        <Button text="Execute F110 Run" type="Accept" press="onExecutePayment"/>
+        <Button text="Cancel" press="onClosePayDialog"/>
+      </buttons>
+    </Dialog>
+
+  </VBox>
+</mvc:View>

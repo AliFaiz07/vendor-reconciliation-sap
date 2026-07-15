@@ -6,9 +6,9 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast"], function (Co
         return MessageToast.show("Passwords do not match");
       }
       const body = {
-        fullName: this.byId("regFullName").getValue(),
-        username: this.byId("regUsername").getValue(),
-        email: this.byId("regEmail").getValue(),
+        fullName: this.byId("regFullName").getValue()?.trim(),
+        username: this.byId("regUsername").getValue()?.trim(),
+        email: this.byId("regEmail").getValue()?.trim(),
         password,
         businessRole: this.byId("regBusinessRole").getSelectedKey()
       };

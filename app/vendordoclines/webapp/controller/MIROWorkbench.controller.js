@@ -106,7 +106,7 @@ sap.ui.define([
               otherCount++;
             }
             
-            if (ex?.status === "OPEN") {
+            if (!r || ex?.status === "OPEN") {
               pending.push({
                 invoiceNo: line.vendorInvoiceNo,
                 vendor: line.sourceVendorCode,
@@ -159,9 +159,34 @@ sap.ui.define([
       }).catch(err => MessageToast.show("Failed to load MIRO analytics: " + err.message));
     },
 
-    onVerifyInvoice: function () {
-      MessageBox.success("3-Way Match validation completed successfully. Invoice verified and posted to S/4HANA Finance!");
-      this.loadKpis();
+    onVerifyInvoice: function (oEvent) {
+      const oContext = oEvent.getSource().getBindingContext("miro");
+      const invNo = oContext.getProperty("invoiceNo");
+      const supplier = oContext.getProperty("vendor");
+      const amountStr = oContext.getProperty("amount").replace(/[^0-9.]/g, '');
+      const amount = parseFloat(amountStr);
+
+      const model = this.getView().getModel();
+      const listBinding = model.bindList("/VendorLedgerItems");
+      
+      listBinding.create({
+        supplier: supplier,
+        companyCode: "1000",
+        accountingDocument: invNo,
+        documentDate: new Date().toISOString().split('T')[0],
+        postingDate: new Date().toISOString().split('T')[0],
+        amountInTransCrcy: amount,
+        transactionCurrency: "INR",
+        isCleared: false,
+        taxAmount: 0
+      });
+
+      MessageBox.success(`Invoice ${invNo} verified and posted to S/4HANA Finance (accounting document generated)!`);
+      
+      setTimeout(() => {
+        this.loadKpis();
+        model.refresh();
+      }, 1000);
     },
 
     onReleaseBlock: function () {
@@ -181,14 +206,15 @@ sap.ui.define([
     },
 
     onLogout: function () {
+      const oRouter = this.getOwnerComponent().getRouter();
       MessageBox.confirm("Are you sure you want to log out?", {
         title: "Confirm Logout",
         actions: [MessageBox.Action.YES, MessageBox.Action.NO],
         emphasizedAction: MessageBox.Action.NO,
-        onClose: (sAction) => {
+        onClose: function (sAction) {
           if (sAction === MessageBox.Action.YES) {
             sessionStorage.removeItem("vr_user");
-            this.getOwnerComponent().getRouter().navTo("login");
+            oRouter.navTo("login");
           }
         }
       });

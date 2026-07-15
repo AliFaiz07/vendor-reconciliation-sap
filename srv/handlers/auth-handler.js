@@ -37,13 +37,19 @@ function appendUserToCsv(user) {
 
 module.exports = (srv) => {
   srv.on('register', async (req) => {
-    const { username, email, password, fullName, businessRole, vendorCode } = req.data;
+    const username = req.data.username?.trim();
+    const email = req.data.email?.trim();
+    const password = req.data.password;
+    const fullName = req.data.fullName?.trim();
+    const businessRole = req.data.businessRole?.trim();
+    const vendorCode = req.data.vendorCode?.trim();
+    
     const { Users } = cds.entities;
     const existing = await SELECT.one.from(Users).where({ username });
     if (existing) return req.error(400, 'Username already exists');
     
     // Default vendorCode to username if it starts with 'V-' and role is vendor-side
-    const resolvedVendorCode = vendorCode || (['AR', 'BILLING'].includes(businessRole) ? username : null);
+    const resolvedVendorCode = vendorCode || (['AR', 'BILLING', 'VENDOR'].includes(businessRole) ? username : null);
     
     const id = cds.utils.uuid();
     const passwordHash = hash(password);
@@ -69,15 +75,23 @@ module.exports = (srv) => {
   });
 
   srv.on('login', async (req) => {
-    const { username, password } = req.data;
+    const username = req.data.username?.trim();
+    const password = req.data.password;
     const { Users } = cds.entities;
+    
+    console.log(`[auth-handler] - Login attempt received for username: "${username}"`);
+    
     const user = await SELECT.one.from(Users).where({ username, passwordHash: hash(password) });
-    if (!user) return req.error(401, 'Invalid credentials');
-    return JSON.stringify({
-      username: user.username,
-      businessRole: user.businessRole,
-      fullName: user.fullName,
-      vendorCode: user.vendorCode || (['AR', 'BILLING'].includes(user.businessRole) ? user.username : null)
-    });
+    if (!user) {
+      console.log(`[auth-handler] - Login failed for: "${username}". Password hash mismatch or user does not exist in SQLite.`);
+      return req.error(401, 'Invalid credentials');
+    }
+    
+    console.log(`[auth-handler] - Login success: "${username}" | Role: ${user.businessRole} | Vendor: ${user.vendorCode || 'None'}`);
+    
+    // Remove hash
+    delete user.passwordHash;
+    
+    return JSON.stringify(user);
   });
 };

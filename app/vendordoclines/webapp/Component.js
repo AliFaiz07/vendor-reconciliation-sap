@@ -14,7 +14,7 @@ sap.ui.define(["sap/ui/core/UIComponent"], function (UIComponent) {
           const user = JSON.parse(value);
           const oModel = self.getModel();
           if (oModel) {
-            const role = ['AR', 'BILLING'].includes(user.businessRole) ? 'Vendor' : user.businessRole;
+            const role = ['AR', 'BILLING', 'VENDOR'].includes(user.businessRole) ? 'Vendor' : user.businessRole;
             oModel.changeHttpHeaders({
               "x-user-role": role,
               "x-user-vendor": user.vendorCode || undefined
@@ -51,9 +51,15 @@ sap.ui.define(["sap/ui/core/UIComponent"], function (UIComponent) {
           const savedUser = localStorage.getItem("vr_user");
           if (savedUser) {
             const user = JSON.parse(savedUser);
-            const role = ['AR', 'BILLING'].includes(user.businessRole) ? 'Vendor' : user.businessRole;
-            options.headers["x-user-role"] = role;
-            options.headers["x-user-vendor"] = user.vendorCode || "";
+            const role = ['AR', 'BILLING', 'VENDOR'].includes(user.businessRole) ? 'Vendor' : user.businessRole;
+            
+            if (typeof options.headers.set === 'function') {
+              options.headers.set("x-user-role", role);
+              options.headers.set("x-user-vendor", user.vendorCode || "");
+            } else {
+              options.headers["x-user-role"] = role;
+              options.headers["x-user-vendor"] = user.vendorCode || "";
+            }
           }
         }
         return originalFetch.call(this, url, options);
@@ -72,7 +78,7 @@ sap.ui.define(["sap/ui/core/UIComponent"], function (UIComponent) {
         const user = JSON.parse(savedUser);
         const oModel = this.getModel();
         if (oModel) {
-          const role = ['AR', 'BILLING'].includes(user.businessRole) ? 'Vendor' : user.businessRole;
+          const role = ['AR', 'BILLING', 'VENDOR'].includes(user.businessRole) ? 'Vendor' : user.businessRole;
           oModel.changeHttpHeaders({
             "x-user-role": role,
             "x-user-vendor": user.vendorCode || undefined

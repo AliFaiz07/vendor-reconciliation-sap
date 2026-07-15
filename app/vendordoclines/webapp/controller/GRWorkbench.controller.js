@@ -10,34 +10,96 @@ sap.ui.define([
       if (!user.username) return this.getOwnerComponent().getRouter().navTo("login");
       
       const model = new JSONModel({
-        pendingGR: 3, grPostedToday: 7, grirClearing: 5, shortDeliveries: 1, returns: 0, poCoverage: 87,
-        grVsPOPct: 87, grirClearedPct: 72, onTimePct: 90,
-        openGRs: [
-          { poNo: 'PO-4500001234', vendor: 'Vasavi Castings', material: 'Cast Iron Flanges', expectedQty: 100, expectedDate: '10-Jul-2026', status: 'Awaiting GR', statusState: 'Warning' },
-          { poNo: 'PO-4500001235', vendor: 'ABC Suppliers', material: 'MS Pipes 6 inch', expectedQty: 50, expectedDate: '11-Jul-2026', status: 'Awaiting GR', statusState: 'Warning' },
-          { poNo: 'PO-4500001236', vendor: 'XYZ Components', material: 'Stainless Bolts M12', expectedQty: 500, expectedDate: '09-Jul-2026', status: 'Overdue', statusState: 'Error' }
-        ],
-        postedGRs: [
-          { grDoc: '5000012345', poNo: 'PO-4500001230', vendor: 'Vasavi Castings', qtyPosted: 95, postingDate: 'Today', miroStatus: 'Not Received', miroState: 'Warning' },
-          { grDoc: '5000012344', poNo: 'PO-4500001229', vendor: 'ABC Suppliers', qtyPosted: 50, postingDate: '08-Jul-2026', miroStatus: 'MIRO Posted', miroState: 'Success' },
-          { grDoc: '5000012343', poNo: 'PO-4500001228', vendor: 'Global Parts', qtyPosted: 200, postingDate: '07-Jul-2026', miroStatus: 'MIRO Posted', miroState: 'Success' }
-        ],
-        grirItems: [
-          { poNo: 'PO-4500001230', grDate: 'Today', grAmount: '₹1,42,500', miroStatus: 'Pending', miroState: 'Warning', daysPending: 0 },
-          { poNo: 'PO-4500001227', grDate: '06-Jul-2026', grAmount: '₹89,000', miroStatus: 'Pending', miroState: 'Warning', daysPending: 3 },
-          { poNo: 'PO-4500001225', grDate: '04-Jul-2026', grAmount: '₹2,25,000', miroStatus: 'Pending', miroState: 'Error', daysPending: 5 }
-        ],
-        returns: []
+        pendingGR: 0,
+        grPostedToday: 0,
+        grirClearing: 0,
+        shortDeliveries: 0,
+        returns: 0,
+        poCoverage: 100,
+        grVsPOPct: 100,
+        grirClearedPct: 100,
+        onTimePct: 100,
+        openGRs: [],
+        postedGRs: [],
+        grirItems: [],
+        returnsList: []
       });
       this.getView().setModel(model, "gr");
+      
+      this.loadKpis();
     },
 
     loadKpis: function () {
-      // Mock refresh
+      const model = this.getView().getModel("gr");
+      
+      Promise.all([
+        fetch("/api/v1/PurchaseOrders").then(r => r.json()),
+        fetch("/api/v1/GrirSnapshot").then(r => r.json())
+      ]).then(([pos, grir]) => {
+        const poList = pos.value || [];
+        const grirList = grir.value || [];
+        
+        const openGRs = poList.filter(po => po.status === 'SENT' || po.status === 'DISPATCHED').map(po => ({
+          poId: po.ID,
+          poNo: po.purchaseOrder,
+          vendor: po.supplier,
+          material: po.material || 'Materials',
+          expectedQty: po.poQty,
+          expectedDate: po.modifiedAt ? new Date(po.modifiedAt).toLocaleDateString() : 'Today',
+          status: po.status === 'DISPATCHED' ? 'Dispatched' : 'Awaiting GR',
+          statusState: po.status === 'DISPATCHED' ? 'Information' : 'Warning'
+        }));
+        
+        const postedGRs = poList.filter(po => po.status === 'GR_POSTED').map(po => ({
+          grDoc: '5000' + po.purchaseOrder.replace(/[^0-9]/g, '').slice(-6),
+          poNo: po.purchaseOrder,
+          vendor: po.supplier,
+          qtyPosted: po.receivedQty,
+          postingDate: new Date(po.modifiedAt).toLocaleDateString(),
+          miroStatus: 'GR Received',
+          miroState: 'Success'
+        }));
+        
+        const grirItems = grirList.map(item => ({
+          poNo: item.purchaseOrder,
+          grDate: item.modifiedAt ? new Date(item.modifiedAt).toLocaleDateString() : 'Recent',
+          grAmount: '₹' + Number(item.grirAmount).toLocaleString('en-IN'),
+          miroStatus: 'Pending Match',
+          miroState: 'Warning',
+          daysPending: 1
+        }));
+        
+        model.setProperty("/pendingGR", openGRs.length);
+        model.setProperty("/grPostedToday", postedGRs.length);
+        model.setProperty("/grirClearing", grirItems.length);
+        
+        model.setProperty("/openGRs", openGRs);
+        model.setProperty("/postedGRs", postedGRs);
+        model.setProperty("/grirItems", grirItems);
+        
+      }).catch(err => {
+        console.error("Error loading GR KPIs:", err);
+      });
     },
 
-    onPostGR: function () {
-      MessageToast.show("Goods Receipt posting (MIGO) simulation started. Sending confirmation to ERP...");
+    onPostGR: function (oEvent) {
+      const oContext = oEvent.getSource().getBindingContext("gr");
+      const poId = oContext.getProperty("poId");
+      const expectedQty = oContext.getProperty("expectedQty");
+      
+      const model = this.getView().getModel();
+      const ctx = model.bindContext("/postGR(...)");
+      ctx.setParameter("poId", poId);
+      ctx.setParameter("grQty", parseFloat(expectedQty));
+      ctx.setParameter("plant", "1000");
+
+      ctx.execute().then(() => {
+        MessageToast.show("Goods Receipt posting (MIGO) succeeded!");
+        this.loadKpis();
+        this.getView().getModel().refresh();
+      }).catch(e => {
+        MessageToast.show("Error: " + e.message);
+      });
     },
 
     onNavBack: function () {
@@ -45,14 +107,15 @@ sap.ui.define([
     },
 
     onLogout: function () {
+      const oRouter = this.getOwnerComponent().getRouter();
       MessageBox.confirm("Are you sure you want to log out?", {
         title: "Confirm Logout",
         actions: [MessageBox.Action.YES, MessageBox.Action.NO],
         emphasizedAction: MessageBox.Action.NO,
-        onClose: (sAction) => {
+        onClose: function (sAction) {
           if (sAction === MessageBox.Action.YES) {
             sessionStorage.removeItem("vr_user");
-            this.getOwnerComponent().getRouter().navTo("login");
+            oRouter.navTo("login");
           }
         }
       });

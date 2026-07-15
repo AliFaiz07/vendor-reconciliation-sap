@@ -23,6 +23,7 @@
         <Column hAlign="End"><Text text="Δ Amount"/></Column>
         <Column><Text text="Status"/></Column>
         <Column><Text text="Recommended Action"/></Column>
+        <Column><Text text="AP Approved"/></Column>
       </columns>
       <items>
         <ColumnListItem type="Active" press="onOpenDetails">
@@ -36,6 +37,7 @@
             <Text text="{path: 'wb>amountDelta', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2, maxFractionDigits: 2}}"/>
             <ObjectStatus text="{wb>exStatus}" state="{wb>exState}"/>
             <Text text="{wb>recommendedAction}"/>
+            <ObjectStatus text="{= ${wb>approvedForPayment} ? 'Approved' : 'Pending' }" state="{= ${wb>approvedForPayment} ? 'Success' : 'None' }"/>
           </cells>
         </ColumnListItem>
       </items>
@@ -55,6 +57,7 @@
           <ObjectAttribute title="Currency" text="{wb>/active/currency}"/>
           <ObjectAttribute title="PO Reference" text="{wb>/active/poReference}"/>
           <ObjectAttribute title="Vendor Code" text="{wb>/active/sourceVendorCode}"/>
+          <ObjectAttribute title="Approved for AP" text="{= ${wb>/active/approvedForPayment} ? 'Yes' : 'No' }"/>
         </Panel>
         <Panel headerText="Matched Ledger Item" class="sapUiSmallMarginTop">
           <ObjectAttribute title="Accounting Doc" text="{wb>/active/ledgerDoc}"/>
@@ -88,6 +91,7 @@
       </VBox>
     </content>
     <buttons>
+      <Button text="Approve for AP Payment" type="Accept" press="onApproveForPaymentFromDialog" visible="{= (${wb>/active/outcomeCode} === 'MATCHED' || ${wb>/active/outcomeCode} === 'MATCHED/3WAY' || ${wb>/active/outcomeCode} === 'MATCHED/QTY-LESS' || ${wb>/active/exStatus} === 'RESOLVED') &amp;&amp; !${wb>/active/approvedForPayment} }"/>
       <Button text="Resolve Exception" type="Accept" press="onResolveFromDialog" visible="{wb>/active/canResolve}"/>
       <Button text="Dispute Exception" type="Reject" press="onDisputeFromDialog" visible="{wb>/active/canDispute}"/>
       <Button text="Reopen Exception" type="Emphasized" press="onReopenFromDialog" visible="{wb>/active/canReopen}"/>

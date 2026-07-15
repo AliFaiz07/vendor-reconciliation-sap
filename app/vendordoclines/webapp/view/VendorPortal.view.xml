@@ -1,0 +1,136 @@
+<mvc:View controllerName="vendordoclines.controller.VendorPortal"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns:uf="sap.ui.unified"
+          xmlns="sap.m"
+          xmlns:f="sap.ui.layout.form"
+          xmlns:core="sap.ui.core">
+
+  <Page title="Vendor Collaboration Portal" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button icon="sap-icon://log" text="Logout" type="Reject" press="onLogout"/>
+    </headerContent>
+    
+    <VBox>
+      <!-- Premium Fiori Horizon Header -->
+      <core:HTML preferDOM="false"
+        content="&lt;div class='vrCockpitHeader'&gt;&lt;div class='vrCockpitHeaderInner'&gt;&lt;div class='vrCockpitHeaderTitle'&gt;Vendor Portal — Sigma &amp; Partner Network&lt;/div&gt;&lt;div class='vrCockpitHeaderSubtitle'&gt;Billing Submissions &amp;middot; Shipment Dispatch &amp;middot; Real-time Payment Tracking&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;"/>
+
+      <VBox class="sapUiMediumMargin">
+        
+        <IconTabBar id="vendorTabBar" select="onTabSelect">
+          <items>
+            
+            <!-- Tab 1: PO Collaboration -->
+            <IconTabFilter text="Purchase Orders" icon="sap-icon://sales-order" key="pos">
+              <Table id="vendorPoTable" items="{
+                path: '/PurchaseOrders',
+                parameters: {
+                  $$operationMode: 'Server'
+                }
+              }">
+                <columns>
+                  <Column><Text text="PO Number"/></Column>
+                  <Column><Text text="Material"/></Column>
+                  <Column hAlign="End"><Text text="Quantity"/></Column>
+                  <Column hAlign="End"><Text text="PO Amount"/></Column>
+                  <Column><Text text="Status"/></Column>
+                  <Column hAlign="Center"><Text text="Action"/></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{purchaseOrder}" class="vrCode"/>
+                      <Text text="{material}"/>
+                      <Text text="{poQty}"/>
+                      <Text text="₹{path: 'poAmount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2}}"/>
+                      <ObjectStatus text="{status}" state="{= ${status} === 'SENT' ? 'Warning' : (${status} === 'DISPATCHED' ? 'Information' : 'Success') }"/>
+                      <Button text="Dispatch Goods" type="Accept" icon="sap-icon://shipping-status" press="onDispatch" visible="{= ${status} === 'SENT' }"/>
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </IconTabFilter>
+
+            <!-- Tab 2: Submit Invoices / Upload Statements -->
+            <IconTabFilter text="Submit Bills &amp; Statements" icon="sap-icon://upload" key="submit">
+              <VBox>
+                <!-- Manual Invoice Submission Form -->
+                <Panel headerText="Submit Single Invoice" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
+                  <f:SimpleForm editable="true" layout="ResponsiveGridLayout">
+                    <f:content>
+                      <Label text="Invoice Number" required="true"/>
+                      <Input id="invNumber" placeholder="e.g. INV-2026-0099" maxLength="16"/>
+                      
+                      <Label text="Invoice Date" required="true"/>
+                      <DatePicker id="invDate" valueFormat="yyyy-MM-dd" displayFormat="dd-MMM-yyyy"/>
+                      
+                      <Label text="Invoice Amount (INR)" required="true"/>
+                      <Input id="invAmount" placeholder="Enter total invoice amount" type="Number"/>
+                      
+                      <Label text="Linked PO Number" required="true"/>
+                      <Input id="invPoRef" placeholder="e.g. PO-4500001001" maxLength="10"/>
+
+                      <Label text="GST / TDS Amount"/>
+                      <Input id="invGstTds" placeholder="Enter GST tax portion" type="Number"/>
+                      
+                      <Label text=""/>
+                      <Button text="Submit Invoice" icon="sap-icon://accept" type="Emphasized" press="onSubmitInvoice" width="200px"/>
+                    </f:content>
+                  </f:SimpleForm>
+                </Panel>
+
+                <!-- Bulk Excel Statement Upload -->
+                <Panel headerText="Bulk Statement Upload (Reconciliation Center)" class="sapUiSmallMarginBottom">
+                  <VBox class="sapUiSmallMargin">
+                    <Label text="Select Vendor Statement spreadsheet (.xlsx)" design="Bold" class="sapUiTinyMarginBottom"/>
+                    <HBox>
+                      <uf:FileUploader id="vendorStatementUploader" width="360px" placeholder="Select Vendor Statement.xlsx..."/>
+                      <Button text="Upload &amp; Analyze" press="onUploadVendorStatement" type="Emphasized" icon="sap-icon://upload" class="sapUiTinyMarginBegin"/>
+                    </HBox>
+                  </VBox>
+                </Panel>
+              </VBox>
+            </IconTabFilter>
+
+            <!-- Tab 3: Invoice & Payment Tracking -->
+            <IconTabFilter text="Invoice &amp; Payment Status" icon="sap-icon://money-bills" key="payments">
+              <Table id="vendorInvoiceTable" items="{
+                path: '/VendorDocLines',
+                parameters: {
+                  $$operationMode: 'Server'
+                }
+              }">
+                <columns>
+                  <Column><Text text="Invoice Number"/></Column>
+                  <Column><Text text="Invoice Date"/></Column>
+                  <Column hAlign="End"><Text text="Invoice Amount"/></Column>
+                  <Column><Text text="PO Reference"/></Column>
+                  <Column><Text text="Reconciliation Approval"/></Column>
+                  <Column><Text text="Payment Status"/></Column>
+                  <Column><Text text="Payment / Clearing Ref"/></Column>
+                </columns>
+                <items>
+                  <ColumnListItem>
+                    <cells>
+                      <Text text="{vendorInvoiceNo}" class="vrCode"/>
+                      <Text text="{invoiceDate}"/>
+                      <Text text="₹{path: 'invoiceAmount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2}}"/>
+                      <Text text="{poReference}" class="vrCode"/>
+                      <ObjectStatus text="{= ${approvedForPayment} ? 'Approved by Finance' : 'Under Matching/Review' }" 
+                                    state="{= ${approvedForPayment} ? 'Success' : 'Warning' }"/>
+                      <ObjectStatus text="{paymentStatus}" 
+                                    state="{= ${paymentStatus} === 'PAID' ? 'Success' : (${paymentStatus} === 'PROPOSED' ? 'Information' : 'None') }"/>
+                      <Text text="{paymentReference}" class="vrCode"/>
+                    </cells>
+                  </ColumnListItem>
+                </items>
+              </Table>
+            </IconTabFilter>
+
+          </items>
+        </IconTabBar>
+
+      </VBox>
+    </VBox>
+  </Page>
+</mvc:View>

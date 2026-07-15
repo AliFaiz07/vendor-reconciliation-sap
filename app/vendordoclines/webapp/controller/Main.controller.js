@@ -88,20 +88,28 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast", "sap/m/Messag
         if (oWorkbenchView) {
           oWorkbenchView.getController().loadData();
         }
+      } else if (sKey === "miro") {
+        const oMiroView = this.byId("miroView");
+        if (oMiroView) {
+          oMiroView.getController().loadKpis();
+        }
+      } else if (sKey === "appayment") {
+        this.getView().getModel().refresh();
       }
     },
     onNavBack: function () {
       this.getOwnerComponent().getRouter().navTo("home");
     },
     onLogout: function () {
+      const oRouter = this.getOwnerComponent().getRouter();
       MessageBox.confirm("Are you sure you want to log out?", {
         title: "Confirm Logout",
         actions: [MessageBox.Action.YES, MessageBox.Action.NO],
         emphasizedAction: MessageBox.Action.NO,
-        onClose: (sAction) => {
+        onClose: function (sAction) {
           if (sAction === MessageBox.Action.YES) {
             sessionStorage.removeItem("vr_user");
-            this.getOwnerComponent().getRouter().navTo("login");
+            oRouter.navTo("login");
           }
         }
       });

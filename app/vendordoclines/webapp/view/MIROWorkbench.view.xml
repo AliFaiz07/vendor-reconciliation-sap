@@ -4,15 +4,8 @@
           xmlns:l="sap.ui.layout"
           xmlns:core="sap.ui.core">
 
-  <Page title="Invoice Verification — MIRO Workbench" showNavButton="true" navButtonPress="onNavBack">
-    <headerContent>
-      <Button icon="sap-icon://log" text="Logout" type="Reject" press="onLogout"/>
-    </headerContent>
-
+  <VBox class="sapUiSmallMargin">
     <VBox>
-      <!-- Dark Header -->
-      <core:HTML preferDOM="false"
-        content="&lt;div class='vrCockpitHeader'&gt;&lt;div class='vrCockpitHeaderInner'&gt;&lt;div class='vrCockpitHeaderTitle'&gt;Invoice Verification — MIRO Workbench&lt;/div&gt;&lt;div class='vrCockpitHeaderSubtitle'&gt;MM Invoice Verification &amp;middot; 3-Way Match Verification &amp;middot; Invoice Blocking&lt;/div&gt;&lt;/div&gt;&lt;div class='vrCockpitHeaderActions'&gt;Last refreshed: Today 09:30 AM&lt;/div&gt;&lt;/div&gt;"/>
 
       <!-- Action buttons row -->
       <Toolbar design="Solid">
@@ -301,5 +294,5 @@
 
       </VBox>
     </VBox>
-  </Page>
+  </VBox>
 </mvc:View>

@@ -49,7 +49,11 @@
         { "pattern": "billing", "name": "billing", "target": "billing" },
         { "pattern": "ar", "name": "ar", "target": "ar" },
         { "pattern": "gr", "name": "gr", "target": "gr" },
-        { "pattern": "miro", "name": "miro", "target": "miro" }
+        { "pattern": "miro", "name": "miro", "target": "miro" },
+        { "pattern": "pr", "name": "pr", "target": "pr" },
+        { "pattern": "po", "name": "po", "target": "po" },
+        { "pattern": "vendorportal", "name": "vendorportal", "target": "vendorportal" },
+        { "pattern": "appayment", "name": "appayment", "target": "appayment" }
       ],
       "targets": {
         "login":     { "viewName": "Login",           "viewLevel": 1 },
@@ -60,7 +64,11 @@
         "billing":   { "viewName": "BillingDashboard","viewLevel": 3 },
         "ar":        { "viewName": "ARDashboard",     "viewLevel": 3 },
         "gr":        { "viewName": "GRWorkbench",     "viewLevel": 3 },
-        "miro":      { "viewName": "MIROWorkbench",   "viewLevel": 3 }
+        "miro":      { "viewName": "MIROWorkbench",   "viewLevel": 3 },
+        "pr":        { "viewName": "PRDashboard",     "viewLevel": 3 },
+        "po":        { "viewName": "PODashboard",     "viewLevel": 3 },
+        "vendorportal": { "viewName": "VendorPortal", "viewLevel": 3 },
+        "appayment": { "viewName": "APPayment",       "viewLevel": 3 }
       }
     }
   }

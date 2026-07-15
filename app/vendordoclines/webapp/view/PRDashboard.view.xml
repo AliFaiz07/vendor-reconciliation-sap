@@ -1,0 +1,74 @@
+<mvc:View controllerName="vendordoclines.controller.PRDashboard"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns="sap.m"
+          xmlns:f="sap.ui.layout.form"
+          xmlns:core="sap.ui.core">
+
+  <Page title="PR Indenter Workbench" showNavButton="true" navButtonPress="onNavBack">
+    <headerContent>
+      <Button icon="sap-icon://log" text="Logout" type="Reject" press="onLogout"/>
+    </headerContent>
+    
+    <VBox>
+      <!-- Premium Fiori Horizon Header -->
+      <core:HTML preferDOM="false"
+        content="&lt;div class='vrCockpitHeader'&gt;&lt;div class='vrCockpitHeaderInner'&gt;&lt;div class='vrCockpitHeaderTitle'&gt;Purchase Requisition (PR) Center&lt;/div&gt;&lt;div class='vrCockpitHeaderSubtitle'&gt;Create Requisitions &amp;middot; Track Indents &amp;middot; Procure-to-Pay Lifecycle Starting Point&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;"/>
+
+      <VBox class="sapUiMediumMargin">
+        
+        <!-- Section: Create Requisition Form -->
+        <Panel headerText="Create Purchase Requisition" expandable="true" expanded="true" class="sapUiSmallMarginBottom">
+          <f:SimpleForm editable="true" layout="ResponsiveGridLayout">
+            <f:content>
+              <Label text="Material / Item Description" required="true"/>
+              <Input id="prMaterial" placeholder="e.g. MS Pipes 6 inch, Cast Iron Flanges..."/>
+              
+              <Label text="Quantity" required="true"/>
+              <StepInput id="prQty" value="1" min="1" step="1"/>
+              
+              <Label text="Estimated Amount (INR)" required="true"/>
+              <Input id="prAmount" placeholder="Enter estimated total price" type="Number"/>
+              
+              <Label text=""/>
+              <Button text="Submit Purchase Requisition" icon="sap-icon://cart-read" type="Emphasized" press="onSubmitPR" width="240px"/>
+            </f:content>
+          </f:SimpleForm>
+        </Panel>
+
+        <!-- Section: PR Worklist -->
+        <Panel headerText="Your Requisitions History" class="sapUiSmallMarginBottom">
+          <Table id="prTable" items="{
+            path: '/PurchaseRequisitions',
+            parameters: {
+              $$operationMode: 'Server'
+            }
+          }">
+            <columns>
+              <Column><Text text="PR Number"/></Column>
+              <Column><Text text="Material"/></Column>
+              <Column hAlign="End"><Text text="Quantity"/></Column>
+              <Column hAlign="End"><Text text="Estimated Amount"/></Column>
+              <Column><Text text="PR Status"/></Column>
+              <Column><Text text="Linked PO"/></Column>
+              <Column><Text text="Created By"/></Column>
+            </columns>
+            <items>
+              <ColumnListItem>
+                <cells>
+                  <Text text="{prNumber}" class="vrCode"/>
+                  <Text text="{material}"/>
+                  <Text text="{qty}"/>
+                  <Text text="₹{path: 'amount', type: 'sap.ui.model.type.Float', formatOptions: {groupingEnabled: true, minFractionDigits: 2}}"/>
+                  <ObjectStatus text="{status}" state="{= ${status} === 'PENDING' ? 'Warning' : (${status} === 'APPROVED' ? 'Information' : 'Success') }"/>
+                  <Link text="{poReference}" press="onPOTrack" visible="{= ${poReference} !== null &amp;&amp; ${poReference} !== '' }"/>
+                  <Text text="{indentor}"/>
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </Panel>
+
+      </VBox>
+    </VBox>
+  </Page>
+</mvc:View>

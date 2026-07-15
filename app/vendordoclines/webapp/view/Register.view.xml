@@ -11,11 +11,13 @@
           <Label text="Confirm Password"/><Input id="regConfirmPassword" type="Password" class="sapUiTinyMarginBottom"/>
           <Label text="Business Role"/>
           <Select id="regBusinessRole" class="sapUiMediumMarginBottom">
-            <core:Item key="GR" text="Goods Receipt"/>
-            <core:Item key="MIRO" text="MIRO (Invoice Verification)"/>
+            <core:Item key="PR" text="PR / Indenter"/>
+            <core:Item key="PO" text="PO Officer"/>
+            <core:Item key="VENDOR" text="Vendor"/>
+            <core:Item key="GR" text="Goods Receipt Officer"/>
+            <core:Item key="FINANCE" text="Finance Executive"/>
             <core:Item key="AP" text="Accounts Payable"/>
-            <core:Item key="BILLING" text="Billing"/>
-            <core:Item key="AR" text="Accounts Receivable"/>
+            <core:Item key="MIRO" text="MIRO (Invoice Verification)"/>
           </Select>
           <Button text="Register" type="Emphasized" press="onRegister" width="100%"/>
           <Button text="Back to Login" press="onGoLogin" width="100%" class="sapUiTinyMarginTop"/>

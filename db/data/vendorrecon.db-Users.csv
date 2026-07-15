@@ -2,5 +2,28 @@ ID,username,email,passwordHash,fullName,businessRole,vendorCode
 d8de7e60-449e-4ff6-98cc-4d3714dfb167,admin,admin@reconcile.com,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,AP Manager (Admin),AP,
 789f28a0-2f91-4e4c-85df-9226b91bf167,gr_user,gr@reconcile.com,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,GR Specialist,GR,
 cd1e98a1-3fc0-4fa2-9b2f-76ab91823bf7,miro_user,miro@reconcile.com,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,MIRO Agent,MIRO,
-68decf91-1af2-4bc2-892f-b7a2cd9b18fc,V-1001,sigma@reconcile.com,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,Sigma Component AR,AR,V-1001
+68decf91-1af2-4bc2-892f-b7a2cd9b18fc,V-1001,sigma@reconcile.com,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,Sigma Component AR,VENDOR,V-1001
 57d7ed35-d11f-434c-8282-e192dd7e6d0e,user3,user3,5860faf02b6bc6222ba5aca523560f0e364ccd8b67bee486fe8bf7c01d492ccb,"user3",AP,
+a91b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d,pr_user,pr@reconcile.com,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,PR Indenter,PR,
+b82c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e,po_user,po@reconcile.com,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,PO Officer,PO,
+c73d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f,finance_user,finance@reconcile.com,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,Finance Executive,FINANCE,
+3818169d-3b94-4540-a015-99d66f0e49d7,pr1,pr1,21ea57eaa3f83bc090b0346a0033b5c4a8468f2974217fbd028bf6bcd3139d9a,"pr1",PR,
+7e043cfb-546f-4af0-b53a-d850e88a369d,po1,po1,c1d2b5e41aafe7faf34719d8d0fc05755728a52446af41329d72f188642d95d5,"po1",PO,
+894e7ed9-7105-47a0-af14-a7044c359b94,pr2,pr2,41bfa2f2111d7821f5ef06481e557408a7c754526c458811f3c83f99c2fd5e10,"pr2",PR,
+23d650b9-2df8-4aa7-ae0c-5ecb9132aa50,po2,po2,39ab251d501212a69daa263f9fb9debb1baf33a30de709b8b4d1028323589aae,"po2",PO,
+6a9def31-03ab-4233-a827-c5e8c5d912fd,v2,v2,fb04dcb6970e4c3d1873de51fd5a50d7bb46b3383113602665c350ec40b5f990,"v2",VENDOR,v2
+a40aadbe-44f7-4213-b1e5-31494dd0c6d4,gr2,gr2,b3144fef4e2fa695f8904e9af2594628834cfe85e03cb2a0e3c1f3f1b7db46ad,"gr2",GR,
+87b748cc-1ed2-42b6-8832-0d6fc8458db7,fin2,fin2,0ebe8a0abcd16d1921e93600ba40f08130fae06b70cf4d7d39e91a59c4863e08,"fin2",FINANCE,
+1008541a-ca59-4147-a411-b2978e6b9600,ap3,ap3,6601b21ea79c9e5391378850d88c387f8f505cb4b7c5fedf1fd8b6b2ea2c1a09,"ap3",AP,
+14dad42f-e4f4-432d-94dd-384ccd4287ae, pr_test , pr@company.com,6956f4af11a5ea9c50966eea41ba294ae307cdd018d4c447cbe1f482d52511af," PR Indenter ",PR,
+3cf78f83-97da-4cbd-b1c3-b1562a1cfb38,pr5,pr5,cbd41bf6a4de03250f27fa6bd37b61ab5dffa928c38c92af0a3169dcd08b98e2,"pr5",PR,
+6ff56075-311f-40cc-b73f-734a2d28268b,po5,po5,debbffacabd1836dce8946ac211a79ec4323e3cfdf18e29c567aaf865c33a6e9,"po5",PO,
+1e0c418d-1c68-439f-939d-03cb4805a02f,v5,v5,ee8616502dd081f3f250cdef1b5f1c40a7be6b5eedd5936f26dccb2c5e312131,"v5",VENDOR,v5
+a955c975-666d-4998-9100-602adc098e93,pr_indenter,jane@ab-solutions.com ,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,"Jane Doe ",PR,
+cace3e03-686f-4eb5-9d01-4e02c7e93764,po_officer,john@ab-solutions.com ,dd4d593d726dc2ce9becdf82c9d28eda488339e03c9262b4df54eb73590d445f,"John Smith",PO,
+21779ba7-98c6-43d3-8642-59c7273135fe,po,john@ab-solutions.com ,6956f4af11a5ea9c50966eea41ba294ae307cdd018d4c447cbe1f482d52511af," John ",PO,
+940392a0-c03e-454a-a1e1-01958c6fcd6b,pr_test ,pr@ab-solutions.com  ,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,"Jane Indenter ",PR,
+01379ae4-23da-4378-8f38-5b1381cef881,po_test , po@ab-solutions.com,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918,"John PO Officer ",PO,
+d956d1dd-d93e-43f7-8760-112a55bb9a0d,ali,ali,94419b99b12c11133a4dfeccc3e17885974beb48f7827c48239aabfbcad238d8,"ali",PR,
+31915672-b242-4eb0-83af-b291e367b8e3,dhruv,dhruv,0b3659243e3eb91cd2da518ebbad79997209e1284fe70756b3e8b8bc8701ac83,"dhruv",PO,
+a357408c-402a-482d-a617-f951a9add951,V-1002, portal@vasavi.com ,8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918," Vasavi Castings",VENDOR,V-1002

@@ -120,6 +120,12 @@
         <IconTabFilter text="Workbench" key="workbench">
           <mvc:XMLView id="workbenchView" viewName="vendordoclines.view.Workbench"/>
         </IconTabFilter>
+        <IconTabFilter text="Invoice Verification (MIRO)" key="miro">
+          <mvc:XMLView id="miroView" viewName="vendordoclines.view.MIROWorkbench"/>
+        </IconTabFilter>
+        <IconTabFilter text="Payment Cockpit (F110)" key="appayment">
+          <mvc:XMLView id="appaymentView" viewName="vendordoclines.view.APPayment"/>
+        </IconTabFilter>
         <IconTabFilter text="Cockpit" key="cockpit">
           <mvc:XMLView id="cockpitView" viewName="vendordoclines.view.Cockpit"/>
         </IconTabFilter>

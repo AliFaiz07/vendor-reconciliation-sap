@@ -42,14 +42,15 @@ sap.ui.define([
             ledgerDoc: ledgerItem?.accountingDocument || "—",
             ledgerAmount: ledgerItem?.amountInTransCrcy || "—",
             ledgerCleared: ledgerItem?.isCleared ? "Yes" : "No",
-            recommendedAction: ex?.recommendedAction || "—"
+            recommendedAction: ex?.recommendedAction || "—",
+            approvedForPayment: line.approvedForPayment
           };
         });
         this._applyFilter();
       }).catch(e => MessageToast.show("Load error: " + e.message));
     },
     _tone: function (code) {
-      if (code === "MATCHED") return "Success";
+      if (code === "MATCHED" || code === "MATCHED/3WAY") return "Success";
       if (code.startsWith("UNMATCHED")) return "Error";
       return "Warning";
     },
@@ -151,6 +152,17 @@ sap.ui.define([
         MessageToast.show("Dispute submitted successfully"); 
         this.byId("detailsDialog").close();
         this.loadData(); 
+      }).catch(e => MessageToast.show("Error: " + e.message));
+    },
+    onApproveForPaymentFromDialog: function () {
+      const active = this.getView().getModel("wb").getProperty("/active");
+      const model = this.getView().getModel();
+      const ctx = model.bindContext("/approveForPayment(...)");
+      ctx.setParameter("docLineId", active.id);
+      ctx.execute().then(() => {
+        MessageToast.show("Invoice approved and sent to AP cockpit successfully!");
+        this.byId("detailsDialog").close();
+        this.loadData();
       }).catch(e => MessageToast.show("Error: " + e.message));
     }
   });

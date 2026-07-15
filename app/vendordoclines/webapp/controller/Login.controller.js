@@ -18,7 +18,7 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/m/MessageToast"], function (Co
       }
     },
     onLogin: function () {
-      const username = this.byId("loginUsername").getValue();
+      const username = this.byId("loginUsername").getValue()?.trim();
       const password = this.byId("loginPassword").getValue();
       fetch("/api/v1/login", {
         method: "POST", headers: { "Content-Type": "application/json" },

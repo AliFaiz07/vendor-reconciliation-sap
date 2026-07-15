@@ -1,10 +1,13 @@
 sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/model/json/JSONModel", "sap/m/MessageBox"], function (Controller, JSONModel, MessageBox) {
   const ROLE_LABELS = {
+    PR:      "PR / Indenter Workbench",
+    PO:      "Purchase Order Workbench",
+    VENDOR:  "Vendor Portal",
     GR:      "Goods Receipt Workbench",
-    MIRO:    "Invoice Verification (MIRO)",
+    FINANCE: "Finance Executive Workbench",
     AP:      "Accounts Payable Cockpit",
-    BILLING: "Vendor Billing Dashboard",
-    AR:      "AR Receivables Monitor"
+    BILLING: "Vendor Billing Dashboard (Legacy)",
+    AR:      "AR Receivables Monitor (Legacy)"
   };
   return Controller.extend("vendordoclines.controller.Home", {
     onInit: function () {
@@ -18,7 +21,16 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/model/json/JSONModel", "sap
     },
     onOpenWorkbench: function () {
       const user = JSON.parse(sessionStorage.getItem("vr_user") || "{}");
-      const roleRouteMap = { AP: "main", BILLING: "billing", AR: "ar", GR: "gr", MIRO: "miro" };
+      const roleRouteMap = { 
+        PR: "pr",
+        PO: "po",
+        VENDOR: "vendorportal",
+        GR: "gr",
+        FINANCE: "main",
+        AP: "main",
+        BILLING: "billing",
+        AR: "ar"
+      };
       const route = roleRouteMap[user.businessRole] || "workbench";
       this.getOwnerComponent().getRouter().navTo(route);
     },
@@ -26,14 +38,15 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/model/json/JSONModel", "sap
       this.getOwnerComponent().getRouter().navTo("login");
     },
     onLogout: function () {
+      const oRouter = this.getOwnerComponent().getRouter();
       MessageBox.confirm("Are you sure you want to log out?", {
         title: "Confirm Logout",
         actions: [MessageBox.Action.YES, MessageBox.Action.NO],
         emphasizedAction: MessageBox.Action.NO,
-        onClose: (sAction) => {
+        onClose: function (sAction) {
           if (sAction === MessageBox.Action.YES) {
             sessionStorage.removeItem("vr_user");
-            this.getOwnerComponent().getRouter().navTo("login");
+            oRouter.navTo("login");
           }
         }
       });
