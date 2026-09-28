@@ -1,0 +1,85 @@
+<mvc:View controllerName="vendordoclines.controller.DemoLogin"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <Page showHeader="false">
+    <customHeader>
+      <Bar>
+        <contentLeft>
+          <Title text="Vendor Reconciliation" level="H3"/>
+        </contentLeft>
+        <contentRight>
+          <Text text="[DEMO MODE]" class="vrDemoLabel"/>
+        </contentRight>
+      </Bar>
+    </customHeader>
+    <VBox alignItems="Center" class="sapUiMediumMarginTop sapUiMediumMarginBottom">
+      <VBox alignItems="Center" width="100%" maxWidth="900px">
+        <Title text="Select Your Demo Profile" level="H1" class="sapUiSmallMarginBottom"/>
+        <Text text="Click any profile tile to enter the application — no password required" class="sapUiSmallMarginBottom"/>
+        <MessageStrip
+          text="DEMO MODE — All data is simulated. No real SAP system connected. All SAP actions (P2P, MIRO, F110) are local simulations."
+          type="Information"
+          showIcon="true"
+          showCloseButton="false"
+          class="sapUiSmallMarginTop sapUiSmallMarginBottom"
+          width="100%"/>
+
+        <HBox wrap="Wrap" justifyContent="Center" class="sapUiMediumMarginTop">
+          <GenericTile id="tile_admin" header="AP Manager" subheader="Rahul Sharma" frameType="OneByOne"
+            press=".onSelectPersona" class="sapUiTinyMarginEnd sapUiTinyMarginBottom vrPersonaTile">
+            <TileContent footer="Full Cockpit Access" unit="AP" />
+          </GenericTile>
+
+          <GenericTile id="tile_finance" header="Finance Executive" subheader="Priya Mehta" frameType="OneByOne"
+            press=".onSelectPersona" class="sapUiTinyMarginEnd sapUiTinyMarginBottom vrPersonaTile">
+            <TileContent footer="MIRO / Reconciliation" unit="FINANCE" />
+          </GenericTile>
+
+          <GenericTile id="tile_gr" header="GR Specialist" subheader="Suresh Kumar" frameType="OneByOne"
+            press=".onSelectPersona" class="sapUiTinyMarginEnd sapUiTinyMarginBottom vrPersonaTile">
+            <TileContent footer="Goods Receipt / MIGO" unit="GR" />
+          </GenericTile>
+
+          <GenericTile id="tile_po" header="PO Officer" subheader="Anita Desai" frameType="OneByOne"
+            press=".onSelectPersona" class="sapUiTinyMarginEnd sapUiTinyMarginBottom vrPersonaTile">
+            <TileContent footer="Purchase Orders" unit="PO" />
+          </GenericTile>
+
+          <GenericTile id="tile_pr" header="PR Indenter" subheader="Vikram Singh" frameType="OneByOne"
+            press=".onSelectPersona" class="sapUiTinyMarginEnd sapUiTinyMarginBottom vrPersonaTile">
+            <TileContent footer="Purchase Requisitions" unit="PR" />
+          </GenericTile>
+
+          <GenericTile id="tile_vendor_ar" header="Vendor (AR)" subheader="Sigma Components" frameType="OneByOne"
+            press=".onSelectPersona" class="sapUiTinyMarginEnd sapUiTinyMarginBottom vrPersonaTile">
+            <TileContent footer="Invoice / Dispute" unit="AR" />
+          </GenericTile>
+
+          <GenericTile id="tile_vendor_billing" header="Vendor (Billing)" subheader="Apex Steel" frameType="OneByOne"
+            press=".onSelectPersona" class="sapUiTinyMarginEnd sapUiTinyMarginBottom vrPersonaTile">
+            <TileContent footer="Statement / Recon" unit="BILLING" />
+          </GenericTile>
+
+          <GenericTile id="tile_supervisor" header="Supervisor" subheader="Kavita Nair" frameType="OneByOne"
+            press=".onSelectPersona" class="sapUiTinyMarginEnd sapUiTinyMarginBottom vrPersonaTile">
+            <TileContent footer="Audit / Full Read" unit="AP" />
+          </GenericTile>
+        </HBox>
+
+        <VBox alignItems="Center" class="sapUiLargeMarginTop" width="100%">
+          <Title text="— or sign in with credentials —" level="H6" class="sapUiSmallMarginBottom"/>
+          <Panel width="380px">
+            <VBox class="sapUiSmallMargin">
+              <Label text="Username" class="sapUiTinyMarginBottom"/>
+              <Input id="loginUsername" placeholder="Enter username" class="sapUiSmallMarginBottom"/>
+              <Label text="Password" class="sapUiTinyMarginBottom"/>
+              <Input id="loginPassword" type="Password" placeholder="Enter password" class="sapUiMediumMarginBottom"/>
+              <Button text="Sign In" type="Emphasized" press=".onLogin" width="100%"/>
+            </VBox>
+          </Panel>
+        </VBox>
+      </VBox>
+    </VBox>
+  </Page>
+</mvc:View>

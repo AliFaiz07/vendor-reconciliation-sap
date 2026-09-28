@@ -8,7 +8,7 @@ sap.ui.define([
     onInit: function () {
       const user = JSON.parse(sessionStorage.getItem("vr_user") || "{}");
       if (!user.username) return this.getOwnerComponent().getRouter().navTo("login");
-      
+
       const model = new JSONModel({
         pendingVerification: 0, matchRate3Way: 100, blockedInvoices: 0, parkedInvoices: 0, postedTodayCount: 0, varianceExceeds: 0,
         matchRatePct: 100, onTimeVerifyPct: 100, varianceOkPct: 100,
@@ -19,13 +19,13 @@ sap.ui.define([
         postedToday: []
       });
       this.getView().setModel(model, "miro");
-      
+
       this.loadKpis();
     },
 
     loadKpis: function () {
       const model = this.getView().getModel("miro");
-      
+
       Promise.all([
         fetch("/api/v1/VendorDocLines").then(r => r.json()),
         fetch("/api/v1/MatchResults").then(r => r.json()),
@@ -35,42 +35,45 @@ sap.ui.define([
         const rMap = new Map(results.value.map(r => [r.vendorDocLine_ID, r]));
         const exMap = new Map(exceptions.value.map(e => [e.matchResult_ID, e]));
         const lMap = new Map(ledger.value.map(l => [l.ID, l]));
-        
+
         const pending = [];
         const parked = [];
         const blocked = [];
         const posted = [];
-        
+
         let totalMatched = 0;
         let totalCount = lines.value.length;
         let priceVarianceCount = 0;
         let qtyMismatchCount = 0;
         let missingGrCount = 0;
         let otherCount = 0;
-        
+
         lines.value.forEach(line => {
           const r = rMap.get(line.ID);
           const ex = r ? exMap.get(r.ID) : undefined;
           const ledgerItem = r?.ledgerItem_ID ? lMap.get(r.ledgerItem_ID) : undefined;
           const code = r?.outcomeCode ?? "UNMATCHED";
-          
+
           const formattedAmt = "₹" + Number(line.invoiceAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 });
           const formattedDelta = "₹" + Number(r?.amountDelta || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 });
-          
+
           if (code === "MATCHED" || code.startsWith("MATCHED/")) {
             totalMatched++;
+            // Deterministic MIRO / SAP accounting document number
+            const miroDocNum = ledgerItem?.accountingDocument
+              || (r.ledgerItem_ID ? "5105" + r.ledgerItem_ID.replace(/-/g, '').slice(0, 6) : "5105" + line.ID.replace(/-/g, '').slice(0, 6));
             posted.push({
-              miroDoc: r.ledgerItem_ID ? r.ledgerItem_ID.slice(0, 10) : "5105" + Math.floor(Math.random() * 900000 + 100000),
+              miroDoc: miroDocNum,
               vendor: line.sourceVendorCode,
               invoiceNo: line.vendorInvoiceNo,
               amount: formattedAmt,
-              postedAt: line.modifiedAt ? new Date(line.modifiedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "09:45 AM",
+              postedAt: line.modifiedAt ? new Date(line.modifiedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (line.createdAt ? new Date(line.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Recorded"),
               cleared: ledgerItem?.isCleared ? "Yes" : "No",
               clearedState: ledgerItem?.isCleared ? "Success" : "Warning"
             });
           } else {
             const ageInDays = ex?.ageInDays || 0;
-            
+
             if (code === "UNMATCHED/PRICE-HIGH") {
               priceVarianceCount++;
               blocked.push({
@@ -105,7 +108,7 @@ sap.ui.define([
             } else {
               otherCount++;
             }
-            
+
             if (!r || ex?.status === "OPEN") {
               pending.push({
                 invoiceNo: line.vendorInvoiceNo,
@@ -119,12 +122,12 @@ sap.ui.define([
             }
           }
         });
-        
+
         const matchRate = totalCount ? Math.round((totalMatched / totalCount) * 100) : 100;
         const totalBlocked = blocked.length;
         const totalParked = parked.length;
         const totalPending = pending.length;
-        
+
         const reasons = [];
         const totalExceptions = priceVarianceCount + qtyMismatchCount + missingGrCount + otherCount;
         if (priceVarianceCount) {
@@ -139,18 +142,18 @@ sap.ui.define([
         if (otherCount) {
           reasons.push({ reason: 'Other Discrepancies', count: otherCount, pct: Math.round((otherCount / (totalExceptions || 1)) * 100), state: 'None' });
         }
-        
+
         model.setProperty("/pendingVerification", totalPending);
         model.setProperty("/matchRate3Way", matchRate);
         model.setProperty("/blockedInvoices", totalBlocked);
         model.setProperty("/parkedInvoices", totalParked);
         model.setProperty("/postedTodayCount", posted.length);
         model.setProperty("/varianceExceeds", priceVarianceCount + qtyMismatchCount);
-        
+
         model.setProperty("/matchRatePct", matchRate);
         model.setProperty("/onTimeVerifyPct", Math.round(100 - (totalParked / (totalCount || 1)) * 30));
         model.setProperty("/varianceOkPct", Math.round(100 - (priceVarianceCount / (totalCount || 1)) * 25));
-        
+
         model.setProperty("/blockedReasons", reasons);
         model.setProperty("/pendingList", pending);
         model.setProperty("/parkedList", parked);
@@ -168,7 +171,7 @@ sap.ui.define([
 
       const model = this.getView().getModel();
       const listBinding = model.bindList("/VendorLedgerItems");
-      
+
       listBinding.create({
         supplier: supplier,
         companyCode: "1000",
@@ -182,7 +185,7 @@ sap.ui.define([
       });
 
       MessageBox.success(`Invoice ${invNo} verified and posted to S/4HANA Finance (accounting document generated)!`);
-      
+
       setTimeout(() => {
         this.loadKpis();
         model.refresh();

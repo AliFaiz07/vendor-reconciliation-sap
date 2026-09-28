@@ -41,7 +41,8 @@
         "async": true
       },
       "routes": [
-        { "pattern": "", "name": "login", "target": "login" },
+        { "pattern": "", "name": "demologin", "target": "demologin" },
+        { "pattern": "login", "name": "login", "target": "login" },
         { "pattern": "register", "name": "register", "target": "register" },
         { "pattern": "home", "name": "home", "target": "home" },
         { "pattern": "workbench", "name": "workbench", "target": "workbench" },
@@ -56,19 +57,20 @@
         { "pattern": "appayment", "name": "appayment", "target": "appayment" }
       ],
       "targets": {
-        "login":     { "viewName": "Login",           "viewLevel": 1 },
-        "register":  { "viewName": "Register",        "viewLevel": 1 },
-        "home":      { "viewName": "Home",            "viewLevel": 2 },
-        "workbench": { "viewName": "PersonaWorkbench","viewLevel": 2 },
-        "main":      { "viewName": "Main",            "viewLevel": 3 },
-        "billing":   { "viewName": "BillingDashboard","viewLevel": 3 },
-        "ar":        { "viewName": "ARDashboard",     "viewLevel": 3 },
-        "gr":        { "viewName": "GRWorkbench",     "viewLevel": 3 },
-        "miro":      { "viewName": "MIROWorkbench",   "viewLevel": 3 },
-        "pr":        { "viewName": "PRDashboard",     "viewLevel": 3 },
-        "po":        { "viewName": "PODashboard",     "viewLevel": 3 },
-        "vendorportal": { "viewName": "VendorPortal", "viewLevel": 3 },
-        "appayment": { "viewName": "APPayment",       "viewLevel": 3 }
+        "demologin": { "viewName": "DemoLogin",        "viewLevel": 1 },
+        "login":     { "viewName": "Login",            "viewLevel": 1 },
+        "register":  { "viewName": "Register",         "viewLevel": 1 },
+        "home":      { "viewName": "Home",             "viewLevel": 2 },
+        "workbench": { "viewName": "PersonaWorkbench", "viewLevel": 2 },
+        "main":      { "viewName": "Main",             "viewLevel": 3 },
+        "billing":   { "viewName": "BillingDashboard", "viewLevel": 3 },
+        "ar":        { "viewName": "ARDashboard",      "viewLevel": 3 },
+        "gr":        { "viewName": "GRWorkbench",      "viewLevel": 3 },
+        "miro":      { "viewName": "MIROWorkbench",    "viewLevel": 3 },
+        "pr":        { "viewName": "PRDashboard",      "viewLevel": 3 },
+        "po":        { "viewName": "PODashboard",      "viewLevel": 3 },
+        "vendorportal": { "viewName": "VendorPortal",  "viewLevel": 3 },
+        "appayment": { "viewName": "APPayment",        "viewLevel": 3 }
       }
     }
   }

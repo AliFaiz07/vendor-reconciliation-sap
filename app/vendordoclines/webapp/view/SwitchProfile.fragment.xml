@@ -1,0 +1,101 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+  <Popover
+    id="switchProfilePopover"
+    title="Switch Demo Profile"
+    placement="Bottom"
+    contentWidth="340px">
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <MessageStrip
+          text="[DEMO MODE] — Switch persona without logging out"
+          type="Information"
+          showIcon="true"
+          showCloseButton="false"
+          class="sapUiSmallMarginBottom"/>
+        <List id="profileList" mode="None" itemPress=".onProfileItemPress">
+          <StandardListItem
+            title="AP Manager"
+            description="Rahul Sharma — Full Cockpit"
+            info="AP"
+            infoState="Information"
+            type="Active">
+            <customData>
+              <core:CustomData key="personaKey" value="admin"/>
+            </customData>
+          </StandardListItem>
+          <StandardListItem
+            title="Finance Executive"
+            description="Priya Mehta — MIRO / Reconciliation"
+            info="FINANCE"
+            infoState="Information"
+            type="Active">
+            <customData>
+              <core:CustomData key="personaKey" value="finance"/>
+            </customData>
+          </StandardListItem>
+          <StandardListItem
+            title="GR Specialist"
+            description="Suresh Kumar — Goods Receipt"
+            info="GR"
+            infoState="Success"
+            type="Active">
+            <customData>
+              <core:CustomData key="personaKey" value="gr_user"/>
+            </customData>
+          </StandardListItem>
+          <StandardListItem
+            title="PO Officer"
+            description="Anita Desai — Purchase Orders"
+            info="PO"
+            infoState="Warning"
+            type="Active">
+            <customData>
+              <core:CustomData key="personaKey" value="po_user"/>
+            </customData>
+          </StandardListItem>
+          <StandardListItem
+            title="PR Indenter"
+            description="Vikram Singh — Requisitions"
+            info="PR"
+            infoState="Warning"
+            type="Active">
+            <customData>
+              <core:CustomData key="personaKey" value="pr_user"/>
+            </customData>
+          </StandardListItem>
+          <StandardListItem
+            title="Vendor (AR)"
+            description="Sigma Components — Invoices"
+            info="AR"
+            infoState="None"
+            type="Active">
+            <customData>
+              <core:CustomData key="personaKey" value="vendor_ar"/>
+            </customData>
+          </StandardListItem>
+          <StandardListItem
+            title="Vendor (Billing)"
+            description="Apex Steel — Statements"
+            info="BILLING"
+            infoState="None"
+            type="Active">
+            <customData>
+              <core:CustomData key="personaKey" value="vendor_billing"/>
+            </customData>
+          </StandardListItem>
+          <StandardListItem
+            title="Supervisor"
+            description="Kavita Nair — Audit Trail"
+            info="AP"
+            infoState="None"
+            type="Active">
+            <customData>
+              <core:CustomData key="personaKey" value="supervisor"/>
+            </customData>
+          </StandardListItem>
+        </List>
+        <Button text="Close" press=".onCloseSwitchProfile" class="sapUiSmallMarginTop" width="100%"/>
+      </VBox>
+    </content>
+  </Popover>
+</core:FragmentDefinition>

@@ -7,17 +7,23 @@
     <VBox>
 
       <VBox class="sapUiMediumMargin">
-        
+        <MessageStrip
+          text="DEMO SIMULATION — All payment proposals and F110 payment runs are local simulations. No real SAP FI system is connected."
+          type="Information"
+          showIcon="true"
+          showCloseButton="false"
+          class="sapUiSmallMarginBottom"/>
+
         <IconTabBar id="apTabBar" select="onTabSelect">
           <items>
-            
+
             <!-- Tab 1: Pending Payments -->
             <IconTabFilter text="Approved Invoices" icon="sap-icon://invoice" key="approved">
               <VBox>
                 <Toolbar>
                   <Title text="Finance Approved Invoice Queue" level="H4"/>
                   <ToolbarSpacer/>
-                  <Button text="Create Payment Proposal" type="Emphasized" icon="sap-icon://create-entry-active" press="onCreateProposal"/>
+                  <Button text="[DEMO] Create Payment Proposal" type="Emphasized" icon="sap-icon://create-entry-active" press="onCreateProposal"/>
                 </Toolbar>
                 <Table id="approvedTable" mode="MultiSelect" items="{
                   path: '/VendorDocLines',
@@ -59,7 +65,7 @@
                 <Toolbar>
                   <Title text="Open Payment Proposals" level="H4"/>
                   <ToolbarSpacer/>
-                  <Button text="Execute Payment Run (F110)" type="Accept" icon="sap-icon://money-bills" press="onOpenPaymentRun"/>
+                  <Button text="[DEMO] Execute Payment Run (F110 Sim)" type="Accept" icon="sap-icon://money-bills" press="onOpenPaymentRun"/>
                 </Toolbar>
                 <Table id="proposalsTable" mode="MultiSelect" items="{
                   path: '/VendorDocLines',

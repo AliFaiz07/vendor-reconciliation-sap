@@ -2,6 +2,7 @@ sap.ui.define([
   "sap/ui/core/mvc/Controller",
   "sap/ui/model/json/JSONModel"
 ], function (Controller, JSONModel) {
+  "use strict";
 
   /* ── SVG Helper: Donut Chart ───────────────────────────────────────────── */
   function makeDonut(segments, total, cx, cy, r, sw) {
@@ -12,8 +13,8 @@ sap.ui.define([
     var cumulative = 0;
     segments.forEach(function (seg) {
       if (!seg.value || seg.value <= 0) return;
-      var segLen = (seg.value / total) * C;
-      var angle = (cumulative / total) * 360 - 90;
+      var segLen = (seg.value / (total || 1)) * C;
+      var angle = ((cumulative / (total || 1)) * 360) - 90;
       out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none"' +
              ' stroke="' + seg.color + '" stroke-width="' + sw + '"' +
              ' stroke-dasharray="' + segLen + ' ' + C + '"' +
@@ -31,6 +32,9 @@ sap.ui.define([
 
   /* ── SVG Helper: Horizontal Bar ─────────────────────────────────────────── */
   function makeHBar(items, maxVal) {
+    if (!items || items.length === 0) {
+      return '<svg width="100%" height="40" xmlns="http://www.w3.org/2000/svg"><text x="0" y="24" font-size="12" fill="#888">No exceptions found</text></svg>';
+    }
     var h = items.length * 54 + 16;
     var out = '<svg width="100%" height="' + h + '" xmlns="http://www.w3.org/2000/svg"' +
               ' style="font-family:72,Arial,sans-serif">';
@@ -49,32 +53,35 @@ sap.ui.define([
 
   /* ── SVG Helper: Stacked Aging Bar ─────────────────────────────────────── */
   function makeAgingBar(a, b, c) {
-    var total = a + b + c || 1;
-    var wa = (a / total * 300).toFixed(1);
-    var wb = (b / total * 300).toFixed(1);
-    var wc = (c / total * 300).toFixed(1);
+    var total = a + b + c;
+    if (total === 0) {
+      return '<svg width="300" height="40" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="8" width="300" height="24" fill="#E8E8E8" rx="3"/><text x="150" y="24" text-anchor="middle" font-size="10" fill="#6A6D70">0 Open Exceptions</text></svg>';
+    }
+    var wa = ((a / total) * 300).toFixed(1);
+    var wb = ((b / total) * 300).toFixed(1);
+    var wc = ((c / total) * 300).toFixed(1);
     return '<svg width="300" height="40" xmlns="http://www.w3.org/2000/svg">' +
       '<rect x="0" y="8" width="' + wa + '" height="24" fill="#1B8E3A" rx="3"/>' +
       '<rect x="' + wa + '" y="8" width="' + wb + '" height="24" fill="#E06C00"/>' +
       '<rect x="' + (+wa + +wb) + '" y="8" width="' + wc + '" height="24" fill="#AA0808" rx="3"/>' +
-      '<text x="' + (wa / 2) + '" y="24" text-anchor="middle" font-size="10" fill="#fff" font-family="72,Arial,sans-serif">' + a + '</text>' +
-      '<text x="' + (+wa + wb / 2) + '" y="24" text-anchor="middle" font-size="10" fill="#fff" font-family="72,Arial,sans-serif">' + b + '</text>' +
-      '<text x="' + (+wa + +wb + wc / 2) + '" y="24" text-anchor="middle" font-size="10" fill="#fff" font-family="72,Arial,sans-serif">' + c + '</text>' +
+      '<text x="' + (wa / 2) + '" y="24" text-anchor="middle" font-size="10" fill="#fff" font-family="72,Arial,sans-serif">' + (a > 0 ? a : '') + '</text>' +
+      '<text x="' + (+wa + wb / 2) + '" y="24" text-anchor="middle" font-size="10" fill="#fff" font-family="72,Arial,sans-serif">' + (b > 0 ? b : '') + '</text>' +
+      '<text x="' + (+wa + +wb + wc / 2) + '" y="24" text-anchor="middle" font-size="10" fill="#fff" font-family="72,Arial,sans-serif">' + (c > 0 ? c : '') + '</text>' +
       '</svg>';
   }
 
   /* ── State Helpers ────────────────────────────────────────────────────── */
   function riskState(r) { return r === "High" ? "Error" : r === "Medium" ? "Warning" : "Success"; }
   function matchState(pct) { return pct >= 90 ? "Success" : pct >= 70 ? "Warning" : "Error"; }
-  function ageState(d) { return d >= 5 ? "Error" : d >= 3 ? "Warning" : "Success"; }
-  function fmt(n) { return Number(n).toLocaleString("en-IN", { maximumFractionDigits: 0 }); }
+  function ageState(d) { return d >= 30 ? "Error" : d >= 15 ? "Warning" : "Success"; }
+  function fmt(n) { return Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 }); }
 
   /* ── Controller ───────────────────────────────────────────────────────── */
   return Controller.extend("vendordoclines.controller.Cockpit", {
 
     onInit: function () {
       try {
-        const router = this.getOwnerComponent().getRouter();
+        var router = this.getOwnerComponent().getRouter();
         router.getRoute("main").attachPatternMatched(this.loadKpis, this);
       } catch (err) {
         console.warn("Router not available during Cockpit onInit");
@@ -83,18 +90,20 @@ sap.ui.define([
     },
 
     loadKpis: function () {
+      var that = this;
       fetch("/api/v1/getCockpitKpis()")
         .then(function (r) { return r.json(); })
         .then(function (data) {
           var k = JSON.parse(data.value);
 
-          /* ── Derived KPIs ─────────────────────────────────────────────── */
-          k.partialCount       = Math.ceil(k.unmatchedCount * 0.3);
-          k.trueUnmatched      = k.unmatchedCount - k.partialCount;
-          k.readyForPayment    = k.matchedCount - Math.ceil(k.matchedCount * 0.08);
-          k.avgResolutionDays  = 3.5;
-          k.totalVendorStatements = k.totalLines;
-          k.totalLedgerRecords    = k.totalLines + Math.ceil(k.totalLines * 0.1);
+          /* ── Actual Backend-Derived KPIs (No Fake Overrides) ─────────── */
+          k.exactMatchedCount  = k.exactMatchedCount || (k.matchedCount || 0);
+          k.partialCount       = k.partialMatchedCount || 0;
+          k.trueUnmatched      = k.unmatchedCount || 0;
+          k.readyForPayment    = k.matchedCount || 0;
+          k.avgResolutionDays  = k.avgResolutionDays !== undefined ? k.avgResolutionDays : 0;
+          k.totalVendorStatements = k.totalVendorStatements || 0;
+          k.totalLedgerRecords    = k.totalLines || 0;
           k.resolvePercentage  = (k.openEx + k.resolvedEx) > 0
             ? Math.round((k.resolvedEx / (k.openEx + k.resolvedEx)) * 100) : 100;
           k.unmatchedPct = k.totalLines > 0
@@ -109,39 +118,33 @@ sap.ui.define([
               reason: lbl,
               count: e[1],
               percentage: k.unmatchedCount ? Math.round((e[1] / k.unmatchedCount) * 100) : 0,
-              color: lbl.indexOf("PAYMENT") >= 0 ? "#AA0808" : "#E06C00",
+              color: lbl.indexOf("PAYMENT") >= 0 ? "#AA0808" : (lbl.indexOf("GST") >= 0 ? "#E06C00" : "#0070F2"),
               state: lbl.indexOf("PAYMENT") >= 0 ? "Error" : "Warning"
             };
           });
 
           /* ── Donut SVG ────────────────────────────────────────────────── */
           k.donutSvg = makeDonut([
-            { value: k.matchedCount,    color: "#1B8E3A", label: "Matched" },
-            { value: k.partialCount,    color: "#E06C00", label: "Partial" },
-            { value: k.trueUnmatched,   color: "#AA0808", label: "Unmatched" }
+            { value: k.exactMatchedCount, color: "#1B8E3A", label: "Exact Matched" },
+            { value: k.partialCount,      color: "#E06C00", label: "Partial Match" },
+            { value: k.trueUnmatched,     color: "#AA0808", label: "Unmatched" }
           ], k.totalLines);
 
           /* ── Reason Bar SVG ──────────────────────────────────────────── */
           k.reasonBarSvg = makeHBar(k.reasonList, k.unmatchedCount);
 
-          /* ── Aging Bar SVG ───────────────────────────────────────────── */
-          var a0 = Math.round(k.openEx * 0.65);
-          var a1 = Math.round(k.openEx * 0.25);
-          var a2 = k.openEx - a0 - a1;
+          /* ── Aging Bar SVG (Real Data from Backend) ───────────────────── */
+          var a0 = k.aging0_15 !== undefined ? k.aging0_15 : 0;
+          var a1 = k.aging16_30 !== undefined ? k.aging16_30 : 0;
+          var a2 = k.aging31plus !== undefined ? k.aging31plus : 0;
           k.agingBarSvg = makeAgingBar(a0, a1, a2);
           k.aging0_15 = a0; k.aging16_30 = a1; k.aging31plus = a2;
-          k.aging0_15Pct  = Math.round(a0 / (k.openEx || 1) * 100);
-          k.aging16_30Pct = Math.round(a1 / (k.openEx || 1) * 100);
-          k.aging31Pct    = Math.round(a2 / (k.openEx || 1) * 100);
+          k.aging0_15Pct  = k.openEx ? Math.round(a0 / k.openEx * 100) : 0;
+          k.aging16_30Pct = k.openEx ? Math.round(a1 / k.openEx * 100) : 0;
+          k.aging31Pct    = k.openEx ? Math.round(a2 / k.openEx * 100) : 0;
 
-          /* ── Top Vendors ─────────────────────────────────────────────── */
-          var rawVendors = k.topVendors && k.topVendors.length ? k.topVendors : [
-            { name: "Vasavi Castings Pvt. Ltd.", code: "1000507", exceptions: 4, risk: "High",   matchRate: 72,  invoices: 8  },
-            { name: "ABC Suppliers Ltd.",         code: "1000502", exceptions: 3, risk: "Medium", matchRate: 80,  invoices: 12 },
-            { name: "XYZ Components Pvt. Ltd.",   code: "1000510", exceptions: 2, risk: "Medium", matchRate: 85,  invoices: 10 },
-            { name: "Global Parts Co.",            code: "1000498", exceptions: 1, risk: "Low",    matchRate: 95,  invoices: 6  },
-            { name: "Precision Metals Ltd.",       code: "1000515", exceptions: 0, risk: "Low",    matchRate: 100, invoices: 5  }
-          ];
+          /* ── Top Vendors (Real Data from Backend) ─────────────────────── */
+          var rawVendors = k.topVendors || [];
           k.topVendors = rawVendors.map(function (v) {
             v.riskState      = riskState(v.risk);
             v.matchRateState = matchState(v.matchRate);
@@ -149,49 +152,60 @@ sap.ui.define([
             return v;
           });
 
-          /* ── Pending Exceptions ──────────────────────────────────────── */
-          var rawEx = k.pendingExceptions && k.pendingExceptions.length ? k.pendingExceptions : [
-            { id: "EX-0047", vendor: "Vasavi Castings",   reason: "Payment Reference Missing",  amount: "₹1,50,000",    days: 5, priority: "High", recommendedAction: "Verify UTR reference and post ledger clearance." },
-            { id: "EX-0046", vendor: "Vasavi Castings",   reason: "Date Out of Window (>30d)",   amount: "₹99,999",      days: 3, priority: "High", recommendedAction: "Review payment terms with billing department." },
-            { id: "EX-0045", vendor: "ABC Suppliers",     reason: "Amount Mismatch > Threshold", amount: "₹25,480",      days: 2, priority: "Medium", recommendedAction: "Review rate differences; request credit note." },
-            { id: "EX-0044", vendor: "XYZ Components",    reason: "GST/TDS Discrepancy",         amount: "₹8,250",       days: 1, priority: "Medium", recommendedAction: "Hold input tax credit; contact vendor to file GST." },
-            { id: "EX-0043", vendor: "Global Parts Co.",  reason: "Duplicate Invoice Suspected", amount: "₹42,000",      days: 0, priority: "Low", recommendedAction: "Confirm duplicate flag and cancel invoice." }
-          ];
+          /* ── Pending Exceptions (Real Data from Backend) ─────────────── */
+          var rawEx = k.pendingExceptions || [];
           k.pendingExceptions = rawEx.map(function (e) {
             e.priorityState = e.priority === "High" ? "Error" : e.priority === "Medium" ? "Warning" : "Success";
             e.daysState     = ageState(e.days);
             return e;
           });
 
-          /* ── Recent Jobs ─────────────────────────────────────────────── */
-          var rawJobs = k.recentJobs && k.recentJobs.length ? k.recentJobs : [
-            { time: "Today, 09:30 AM",       vendor: "Vasavi Castings Pvt. Ltd.", status: "Completed", matched: k.matchedCount, total: k.totalLines, pct: k.matchRate },
-            { time: "Yesterday, 03:15 PM",   vendor: "ABC Suppliers Ltd.",        status: "Completed", matched: 12, total: 15, pct: 80 },
-            { time: "Yesterday, 11:00 AM",   vendor: "XYZ Components Pvt. Ltd.", status: "Completed", matched: 17, total: 20, pct: 85 },
-            { time: "08-Jul-2026, 05:45 PM", vendor: "Global Parts Co.",          status: "Completed", matched: 6,  total: 6,  pct: 100 }
-          ];
+          /* ── Recent Jobs (Real Data from Backend) ────────────────────── */
+          var rawJobs = k.recentJobs || [];
           k.recentJobs = rawJobs.map(function (j) {
             j.matchState = matchState(j.pct);
             return j;
           });
 
-          /* ── Approval Queue ──────────────────────────────────────────── */
-          var rawApprovals = k.approvalQueue && k.approvalQueue.length ? k.approvalQueue : [
-            { id: "APR-012", vendor: "Vasavi Castings",  amount: "₹2,49,999", type: "Exception Override", requestedBy: "A.Sharma",  dueDate: "10-Jul-2026", urgency: "High" },
-            { id: "APR-011", vendor: "ABC Suppliers",    amount: "₹25,480",   type: "Amount Tolerance",   requestedBy: "M.Patel",   dueDate: "11-Jul-2026", urgency: "Medium" },
-            { id: "APR-010", vendor: "XYZ Components",   amount: "₹8,250",    type: "GST Clarification",  requestedBy: "R.Gupta",   dueDate: "12-Jul-2026", urgency: "Low" }
-          ];
+          /* ── Approval Queue (Real Data from Backend) ─────────────────── */
+          var rawApprovals = k.approvalQueue || [];
           k.approvalQueue = rawApprovals.map(function (a) {
             a.urgencyState = riskState(a.urgency);
             return a;
           });
 
-          /* ── High-Risk Vendors ───────────────────────────────────────── */
-          k.highRiskVendors = k.topVendors.filter(function (v) { return v.risk !== "Low"; });
+          /* ── Apply Model ─────────────────────────────────────────────── */
+          var oModel = that.getView().getModel("cockpit");
+          if (!oModel) {
+            oModel = new JSONModel(k);
+            that.getView().setModel(oModel, "cockpit");
+          } else {
+            oModel.setData(k);
+          }
+        })
+        .catch(function (err) {
+          console.error("Cockpit KPI fetch error:", err);
+        });
+    },
 
-          this.getView().setModel(new JSONModel(k), "cockpit");
-        }.bind(this))
-        .catch(function (err) { console.error("Cockpit KPI load error:", err); });
+    onRefresh: function () {
+      this.loadKpis();
+    },
+
+    onNavToReconcile: function () {
+      this.getOwnerComponent().getRouter().navTo("workbench");
+    },
+
+    onNavToExceptions: function () {
+      this.getOwnerComponent().getRouter().navTo("workbench");
+    },
+
+    onNavToVendor: function (oEvent) {
+      var bindingContext = oEvent.getSource().getBindingContext("cockpit");
+      if (bindingContext) {
+        var vendorCode = bindingContext.getProperty("code");
+        this.getOwnerComponent().getRouter().navTo("workbench", { vendor: vendorCode });
+      }
     }
   });
 });

@@ -21,3 +21,7 @@ mta_archives/
 # Excel temp files
 ~$*
 
+db.sqlite-shm
+db.sqlite-wal
+playwright_error.png
+scratch/

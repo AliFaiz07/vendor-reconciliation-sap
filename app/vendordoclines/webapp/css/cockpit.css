@@ -116,3 +116,53 @@
 .vrItalicText {
   font-style: italic !important;
 }
+
+/* ── Demo Mode Styles ─────────────────────────────────────────────────── */
+.vrDemoLabel {
+  color: #E06C00 !important;
+  font-weight: bold !important;
+  font-size: 0.75rem !important;
+  padding: 3px 8px !important;
+  border-radius: 4px !important;
+  background-color: #FFF3E0 !important;
+  border: 1px solid #E06C00 !important;
+}
+
+.vrPersonaTile {
+  cursor: pointer;
+  min-width: 175px !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vrPersonaTile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 112, 242, 0.25) !important;
+}
+
+/* ── Mobile Responsive Adjustments (390px - 844px) ───────────────────── */
+@media (max-width: 768px) {
+  .sapMGT {
+    min-width: 140px !important;
+    width: 100% !important;
+  }
+  .sapUiLargeMarginTop {
+    margin-top: 1rem !important;
+  }
+  .sapUiMediumMargin {
+    margin: 0.5rem !important;
+  }
+  .sapMPanel {
+    width: 100% !important;
+  }
+
+  .vrCockpitHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .sapUiSizeCompact .sapMTable .sapMListTbl {
+    display: block;
+    overflow-x: auto;
+  }
+}

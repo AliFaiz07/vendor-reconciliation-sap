@@ -1,21 +1,54 @@
 <mvc:View controllerName="vendordoclines.controller.Home" xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m">
-  <Page title="Vendor Reconciliation — Home" showNavButton="true" navButtonPress="onNavBack">
-    <headerContent>
-      <Button icon="sap-icon://log" text="Logout" type="Reject" press="onLogout"/>
-    </headerContent>
+  <Page title="Vendor Reconciliation" showNavButton="false" showHeader="false">
+    <customHeader>
+      <Bar>
+        <contentLeft>
+          <Title text="Vendor Reconciliation" level="H3"/>
+        </contentLeft>
+        <contentRight>
+          <Text text="{home>/demoLabel}" class="vrDemoLabel"/>
+          <Button icon="sap-icon://people-connected" text="Switch Profile" press="onSwitchProfile" class="sapUiTinyMarginEnd"/>
+          <Button icon="sap-icon://refresh" text="Reset Demo" press="onResetDemo" class="sapUiTinyMarginEnd"/>
+          <Button icon="sap-icon://log" text="Logout" type="Reject" press="onLogout"/>
+        </contentRight>
+      </Bar>
+    </customHeader>
     <VBox class="sapUiMediumMargin">
       <Title text="Welcome, {home>/fullName}" level="H1" class="sapUiSmallMarginBottom"/>
-      <Text text="Role: {home>/businessRole}" class="sapUiMediumMarginBottom"/>
+      <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+        <Text text="Role: "/>
+        <ObjectStatus text="{home>/businessRole}" state="Information" class="sapUiTinyMarginBegin"/>
+        <Text text="  |  Vendor: {home>/vendorCode}" visible="{= !!${home>/vendorCode} }" class="sapUiTinyMarginBegin"/>
+      </HBox>
+      <MessageStrip
+        text="DEMO MODE — All P2P, payment, and SAP actions (MIGO, MIRO, F110, F-44) are local simulations. No real SAP system is connected."
+        type="Warning"
+        showIcon="true"
+        showCloseButton="false"
+        class="sapUiSmallMarginBottom"/>
+
       <HBox wrap="Wrap" class="sapUiMediumMarginBottom">
-        <GenericTile header="Matched" subheader="lines" class="sapUiTinyMarginEnd" frameType="TwoByOne">
+        <GenericTile header="Matched" subheader="invoice lines" class="sapUiTinyMarginEnd" frameType="TwoByOne">
           <TileContent><NumericContent value="{home>/kpis/matchedCount}" valueColor="Good"/></TileContent>
         </GenericTile>
-        <GenericTile header="Exceptions" subheader="open" class="sapUiTinyMarginEnd" frameType="TwoByOne">
-          <TileContent><NumericContent value="{home>/kpis/exceptionCount}" valueColor="Critical"/></TileContent>
+        <GenericTile header="Open Exceptions" subheader="requiring action" class="sapUiTinyMarginEnd" frameType="TwoByOne">
+          <TileContent><NumericContent value="{home>/kpis/openEx}" valueColor="Critical"/></TileContent>
+        </GenericTile>
+        <GenericTile header="Total Lines" subheader="statement lines" class="sapUiTinyMarginEnd" frameType="TwoByOne">
+          <TileContent><NumericContent value="{home>/kpis/totalLines}" valueColor="Neutral"/></TileContent>
+        </GenericTile>
+        <GenericTile header="Match Rate" subheader="this period" class="sapUiTinyMarginEnd" frameType="TwoByOne">
+          <TileContent><NumericContent value="{home>/kpis/matchRate}" unit="%" valueColor="Good"/></TileContent>
         </GenericTile>
       </HBox>
+
       <Title text="Your Workbench" level="H3" class="sapUiSmallMarginBottom"/>
-      <GenericTile header="{home>/workbenchLabel}" subheader="Open workbench" press="onOpenWorkbench" frameType="OneByOne" class="sapUiTinyMarginEnd"/>
+      <GenericTile
+        header="{home>/workbenchLabel}"
+        subheader="Open your persona workbench"
+        press="onOpenWorkbench"
+        frameType="OneByOne"
+        class="sapUiTinyMarginEnd vrPersonaTile"/>
     </VBox>
   </Page>
 </mvc:View>
